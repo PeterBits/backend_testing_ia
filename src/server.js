@@ -8,6 +8,7 @@ require("dotenv").config();
 // Import routes
 const authRoutes = require("./routes/auth");
 const routineRoutes = require("./routes/routines");
+const exerciseRoutes = require("./routes/exercises");
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.get("/", (req, res) => {
 // API routes
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/routines", routineRoutes);
+app.use("/api/exercises", exerciseRoutes);
 
 // 404 handler
 app.use((req, res, next) => {
