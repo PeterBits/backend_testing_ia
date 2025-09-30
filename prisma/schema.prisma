@@ -71,6 +71,7 @@ model RoutineExercise {
   exerciseId Int
   sets       Int      // Number of sets
   reps       Int      // Number of repetitions
+  weight     Float?   // Weight in kilograms (optional)
   rest       Int?     // Rest time in seconds
   order      Int      // Order in the routine
   createdAt  DateTime @default(now())
