@@ -14,8 +14,17 @@ class RoutineController {
       const routines = await prisma.routine.findMany({
         where: { userId: req.userId },
         include: {
-          exercises: {
+          routineExercises: {
             orderBy: { order: "asc" },
+            include: {
+              exercise: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                },
+              },
+            },
           },
           creator: {
             select: {
@@ -26,7 +35,7 @@ class RoutineController {
             },
           },
           _count: {
-            select: { exercises: true },
+            select: { routineExercises: true },
           },
         },
         orderBy: { updatedAt: "desc" },
@@ -60,8 +69,17 @@ class RoutineController {
           userId: req.userId, // Ensure user can only access their own routines
         },
         include: {
-          exercises: {
+          routineExercises: {
             orderBy: { order: "asc" },
+            include: {
+              exercise: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                },
+              },
+            },
           },
           user: {
             select: {
@@ -133,15 +151,18 @@ class RoutineController {
           },
         });
 
-        // Create exercises if provided
+        // Create routine exercises if provided
         if (exercises.length > 0) {
           const exerciseData = exercises.map((exercise, index) => ({
-            ...exercise,
             routineId: newRoutine.id,
+            exerciseId: exercise.exerciseId,
+            sets: exercise.sets,
+            reps: exercise.reps,
+            rest: exercise.rest || null,
             order: exercise.order || index + 1,
           }));
 
-          await tx.exercise.createMany({
+          await tx.routineExercise.createMany({
             data: exerciseData,
           });
         }
@@ -150,8 +171,17 @@ class RoutineController {
         return await tx.routine.findUnique({
           where: { id: newRoutine.id },
           include: {
-            exercises: {
+            routineExercises: {
               orderBy: { order: "asc" },
+              include: {
+                exercise: {
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                  },
+                },
+              },
             },
           },
         });
@@ -217,22 +247,25 @@ class RoutineController {
           },
         });
 
-        // If exercises are provided, replace all exercises
+        // If exercises are provided, replace all routine exercises
         if (exercises !== undefined) {
-          // Delete existing exercises
-          await tx.exercise.deleteMany({
+          // Delete existing routine exercises
+          await tx.routineExercise.deleteMany({
             where: { routineId: parseInt(id) },
           });
 
-          // Create new exercises
+          // Create new routine exercises
           if (exercises.length > 0) {
             const exerciseData = exercises.map((exercise, index) => ({
-              ...exercise,
               routineId: parseInt(id),
+              exerciseId: exercise.exerciseId,
+              sets: exercise.sets,
+              reps: exercise.reps,
+              rest: exercise.rest || null,
               order: exercise.order || index + 1,
             }));
 
-            await tx.exercise.createMany({
+            await tx.routineExercise.createMany({
               data: exerciseData,
             });
           }
@@ -242,8 +275,17 @@ class RoutineController {
         return await tx.routine.findUnique({
           where: { id: parseInt(id) },
           include: {
-            exercises: {
+            routineExercises: {
               orderBy: { order: "asc" },
+              include: {
+                exercise: {
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                  },
+                },
+              },
             },
           },
         });
@@ -350,12 +392,15 @@ class RoutineController {
 
         if (exercises.length > 0) {
           const exerciseData = exercises.map((exercise, index) => ({
-            ...exercise,
             routineId: newRoutine.id,
+            exerciseId: exercise.exerciseId,
+            sets: exercise.sets,
+            reps: exercise.reps,
+            rest: exercise.rest || null,
             order: exercise.order || index + 1,
           }));
 
-          await tx.exercise.createMany({
+          await tx.routineExercise.createMany({
             data: exerciseData,
           });
         }
@@ -363,8 +408,17 @@ class RoutineController {
         return await tx.routine.findUnique({
           where: { id: newRoutine.id },
           include: {
-            exercises: {
+            routineExercises: {
               orderBy: { order: "asc" },
+              include: {
+                exercise: {
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                  },
+                },
+              },
             },
             user: {
               select: {
@@ -616,7 +670,7 @@ class RoutineController {
             select: {
               _count: {
                 select: {
-                  exercises: true,
+                  routineExercises: true,
                 },
               },
               createdAt: true,
@@ -627,7 +681,7 @@ class RoutineController {
 
       const totalRoutines = stats._count.routines;
       const totalExercises = stats.routines.reduce(
-        (sum, routine) => sum + routine._count.exercises,
+        (sum, routine) => sum + routine._count.routineExercises,
         0
       );
 
@@ -662,27 +716,6 @@ class RoutineController {
 }
 
 // Validation middleware
-const exerciseValidation = [
-  body("name")
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Exercise name must be between 1 and 100 characters"),
-  body("sets")
-    .isInt({ min: 1, max: 50 })
-    .withMessage("Sets must be between 1 and 50"),
-  body("reps")
-    .isInt({ min: 1, max: 500 })
-    .withMessage("Reps must be between 1 and 500"),
-  body("rest")
-    .optional()
-    .isInt({ min: 0, max: 3600 })
-    .withMessage("Rest must be between 0 and 3600 seconds"),
-  body("order")
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage("Order must be a positive integer"),
-];
-
 const routineValidation = [
   body("title")
     .trim()
@@ -702,7 +735,7 @@ const routineValidation = [
     .custom((value, { req }) => {
       // Validate each exercise in the array
       if (typeof value !== "object") return false;
-      if (!value.name || value.name.length < 1 || value.name.length > 100)
+      if (!Number.isInteger(value.exerciseId) || value.exerciseId < 1)
         return false;
       if (!Number.isInteger(value.sets) || value.sets < 1 || value.sets > 50)
         return false;
@@ -720,7 +753,7 @@ const routineValidation = [
         return false;
       return true;
     })
-    .withMessage("Invalid exercise data"),
+    .withMessage("Invalid exercise data - must include exerciseId, sets, reps"),
 ];
 
 const assignRoutineValidation = [
@@ -744,7 +777,7 @@ const assignRoutineValidation = [
     .optional()
     .custom((value, { req }) => {
       if (typeof value !== "object") return false;
-      if (!value.name || value.name.length < 1 || value.name.length > 100)
+      if (!Number.isInteger(value.exerciseId) || value.exerciseId < 1)
         return false;
       if (!Number.isInteger(value.sets) || value.sets < 1 || value.sets > 50)
         return false;
@@ -762,7 +795,7 @@ const assignRoutineValidation = [
         return false;
       return true;
     })
-    .withMessage("Invalid exercise data"),
+    .withMessage("Invalid exercise data - must include exerciseId, sets, reps"),
 ];
 
 const addAthleteValidation = [
