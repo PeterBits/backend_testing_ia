@@ -10,7 +10,11 @@
     "test:watch": "jest --watch",
     "migrate": "npx prisma migrate dev --name",
     "prisma:studio": "npx prisma studio",
-    "prisma:generate": "npx prisma generate"
+    "prisma:generate": "npx prisma generate",
+    "seed": "node prisma/seed.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "keywords": [
     "gym",
