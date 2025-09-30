@@ -42,10 +42,12 @@ npm run prisma:generate                          # Shortcut for generate
 
 ### Database Schema (Prisma)
 
-Four main models with cascading deletes:
-- **User** (with Role: ATHLETE or TRAINER) → has many **Routine** → has many **Exercise**
+Five main models with cascading deletes:
+- **User** (with Role: ATHLETE or TRAINER) → has many **Routine**
+- **Exercise** - Catalog of exercises (id, name, description)
+- **Routine** - Workout routines with `userId` (owner) and `createdBy` (creator)
+- **RoutineExercise** - Join table linking routines to exercises with sets, reps, rest, order
 - **TrainerAthlete** - Join table for N:N relationship between trainers and athletes
-- **Routine** has `userId` (who owns it) and `createdBy` (who created it)
 - All relationships use `onDelete: Cascade`
 - Database service is a singleton accessible via `databaseService.getClient()`
 
@@ -71,12 +73,15 @@ Four main models with cascading deletes:
 
 ### Validation
 
-Uses `express-validator` with custom validators for nested exercise arrays:
-- Title: 1-100 chars
-- Description: 0-500 chars (optional)
-- Exercise sets: 1-50
-- Exercise reps: 1-500
-- Rest time: 0-3600 seconds (optional)
+Uses `express-validator` with custom validators:
+- Routine title: 1-100 chars
+- Routine description: 0-500 chars (optional)
+- Exercise name: 1-100 chars
+- Exercise description: 0-500 chars (optional)
+- RoutineExercise sets: 1-50
+- RoutineExercise reps: 1-500
+- RoutineExercise rest: 0-3600 seconds (optional)
+- RoutineExercise requires valid `exerciseId` from catalog
 
 ### Security Features
 
@@ -136,3 +141,10 @@ All endpoints require `Authorization: Bearer <token>` header
 
 **Athlete Only:**
 - `GET /trainers` - Get all athlete's trainers
+
+### Exercises (`/api/exercises/*`)
+All endpoints require `Authorization: Bearer <token>` header
+
+- `GET /` - Get all exercises from catalog
+- `GET /:id` - Get specific exercise by ID
+- `POST /` - Create new exercise (for admin/future use)
