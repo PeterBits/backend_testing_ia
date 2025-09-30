@@ -29,6 +29,7 @@ const authenticateToken = async (req, res, next) => {
         id: true,
         email: true,
         name: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
         // Note: password is excluded for security
@@ -92,6 +93,7 @@ const optionalAuth = async (req, res, next) => {
           id: true,
           email: true,
           name: true,
+          role: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -111,7 +113,32 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
+/**
+ * Middleware to check if user has required role
+ * @param {string|string[]} allowedRoles - Role or array of roles allowed
+ */
+const requireRole = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        error: "Access denied",
+        message: "Authentication required.",
+      });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "You do not have permission to access this resource.",
+      });
+    }
+
+    next();
+  };
+};
+
 module.exports = {
   authenticateToken,
   optionalAuth,
+  requireRole,
 };

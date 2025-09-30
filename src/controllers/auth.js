@@ -18,7 +18,7 @@ class AuthController {
         });
       }
 
-      const { email, password, name } = req.body;
+      const { email, password, name, role } = req.body;
       const prisma = databaseService.getClient();
 
       // Check if user already exists
@@ -52,11 +52,13 @@ class AuthController {
           email,
           password: hashedPassword,
           name: name || null,
+          role: role || "ATHLETE", // Default to ATHLETE if not specified
         },
         select: {
           id: true,
           email: true,
           name: true,
+          role: true,
           createdAt: true,
           // password excluded for security
         },
@@ -66,6 +68,7 @@ class AuthController {
       const token = AuthUtils.generateToken({
         userId: user.id,
         email: user.email,
+        role: user.role,
       });
 
       res.status(201).json({
@@ -129,6 +132,7 @@ class AuthController {
       const token = AuthUtils.generateToken({
         userId: user.id,
         email: user.email,
+        role: user.role,
       });
 
       // Return user data (without password)
@@ -211,6 +215,7 @@ class AuthController {
           id: true,
           email: true,
           name: true,
+          role: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -314,6 +319,10 @@ const registerValidation = [
     .trim()
     .isLength({ min: 1, max: 100 })
     .withMessage("Name must be between 1 and 100 characters"),
+  body("role")
+    .optional()
+    .isIn(["ATHLETE", "TRAINER"])
+    .withMessage("Role must be either ATHLETE or TRAINER"),
 ];
 
 const loginValidation = [
