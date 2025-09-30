@@ -9,6 +9,7 @@ require("dotenv").config();
 const authRoutes = require("./routes/auth");
 const routineRoutes = require("./routes/routines");
 const exerciseRoutes = require("./routes/exercises");
+const metricsRoutes = require("./routes/metrics");
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/routines", routineRoutes);
 app.use("/api/exercises", exerciseRoutes);
+app.use("/api/metrics", metricsRoutes);
 
 // 404 handler
 app.use((req, res, next) => {
