@@ -13,12 +13,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ATHLETE  // Deportista
+  TRAINER  // Entrenador
+}
+
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique
   password  String    // Hashed password
   name      String?
+  role      Role      @default(ATHLETE)
   routines  Routine[]
+  createdRoutines Routine[] @relation("RoutineCreator")
+
+  // Relación entrenador-deportista
+  trainers  TrainerAthlete[] @relation("AthleteTrainers")
+  athletes  TrainerAthlete[] @relation("TrainerAthletes")
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -31,6 +43,8 @@ model Routine {
   description String?
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
+  creator     User      @relation("RoutineCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  createdBy   Int
   exercises   Exercise[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -49,4 +63,16 @@ model Exercise {
   routineId Int
 
   @@map("exercises")
+}
+
+model TrainerAthlete {
+  id         Int      @id @default(autoincrement())
+  trainer    User     @relation("TrainerAthletes", fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId  Int
+  athlete    User     @relation("AthleteTrainers", fields: [athleteId], references: [id], onDelete: Cascade)
+  athleteId  Int
+  createdAt  DateTime @default(now())
+
+  @@unique([trainerId, athleteId])
+  @@map("trainer_athlete")
 }
