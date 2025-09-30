@@ -80,6 +80,7 @@ Uses `express-validator` with custom validators:
 - Exercise description: 0-500 chars (optional)
 - RoutineExercise sets: 1-50
 - RoutineExercise reps: 1-500
+- RoutineExercise weight: 0-1000 kg (optional, accepts decimals)
 - RoutineExercise rest: 0-3600 seconds (optional)
 - RoutineExercise requires valid `exerciseId` from catalog
 
