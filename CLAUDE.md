@@ -42,12 +42,13 @@ npm run prisma:generate                          # Shortcut for generate
 
 ### Database Schema (Prisma)
 
-Five main models with cascading deletes:
-- **User** (with Role: ATHLETE or TRAINER) → has many **Routine**
+Six main models with cascading deletes:
+- **User** (with Role: ATHLETE or TRAINER) → has many **Routine** → has one **UserMetrics**
 - **Exercise** - Catalog of exercises (id, name, description)
 - **Routine** - Workout routines with `userId` (owner) and `createdBy` (creator)
-- **RoutineExercise** - Join table linking routines to exercises with sets, reps, rest, order
+- **RoutineExercise** - Join table linking routines to exercises with sets, reps, weight, rest, order
 - **TrainerAthlete** - Join table for N:N relationship between trainers and athletes
+- **UserMetrics** - Optional body metrics (height, weight, age, gender, bodyFat, muscleMass)
 - All relationships use `onDelete: Cascade`
 - Database service is a singleton accessible via `databaseService.getClient()`
 
@@ -149,3 +150,20 @@ All endpoints require `Authorization: Bearer <token>` header
 - `GET /` - Get all exercises from catalog
 - `GET /:id` - Get specific exercise by ID
 - `POST /` - Create new exercise (for admin/future use)
+
+### User Metrics (`/api/metrics`)
+All endpoints require `Authorization: Bearer <token>` header
+
+- `GET /` - Get user's body metrics
+- `PUT /` - Create or update user's body metrics
+- `DELETE /` - Delete user's body metrics
+
+**Available metrics:**
+- height (50-300 cm)
+- weight (20-500 kg)
+- age (1-150 years)
+- gender (male, female, other, prefer_not_to_say)
+- bodyFat (0-100%)
+- muscleMass (0-500 kg)
+
+All fields are optional and can be updated independently.

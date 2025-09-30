@@ -87,6 +87,40 @@ async function main() {
     ],
   });
 
+  // Create User Metrics for athletes
+  console.log("📏 Creating user metrics...");
+  await prisma.userMetrics.createMany({
+    data: [
+      {
+        userId: athlete1.id,
+        height: 178,
+        weight: 75.5,
+        age: 28,
+        gender: "male",
+        bodyFat: 15.2,
+        muscleMass: 58.5,
+      },
+      {
+        userId: athlete2.id,
+        height: 165,
+        weight: 62,
+        age: 25,
+        gender: "female",
+        bodyFat: 22.5,
+        muscleMass: 42,
+      },
+      {
+        userId: athlete3.id,
+        height: 182,
+        weight: 88,
+        age: 32,
+        gender: "male",
+        bodyFat: 18,
+        muscleMass: 65,
+      },
+    ],
+  });
+
   // Create Exercise Catalog
   console.log("📚 Creating exercise catalog...");
   const sentadillas = await prisma.exercise.create({
@@ -505,6 +539,7 @@ async function main() {
   console.log(`  - 2 Trainers`);
   console.log(`  - 4 Athletes`);
   console.log(`  - 5 Trainer-Athlete relationships`);
+  console.log(`  - 3 User metrics profiles`);
   console.log(`  - 21 Exercises in catalog`);
   console.log(`  - 6 Routines with assigned exercises`);
   console.log("\n🔐 Login credentials (all users):");
