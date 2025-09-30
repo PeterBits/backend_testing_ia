@@ -26,6 +26,7 @@ model User {
   role      Role      @default(ATHLETE)
   routines  Routine[]
   createdRoutines Routine[] @relation("RoutineCreator")
+  metrics   UserMetrics?
 
   // Relación entrenador-deportista
   trainers  TrainerAthlete[] @relation("AthleteTrainers")
@@ -89,4 +90,25 @@ model TrainerAthlete {
 
   @@unique([trainerId, athleteId])
   @@map("trainer_athlete")
+}
+
+model UserMetrics {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int      @unique
+
+  // Body measurements
+  height    Float?   // Height in centimeters
+  weight    Float?   // Current weight in kilograms
+  age       Int?     // Age in years
+  gender    String?  // Gender (optional: "male", "female", "other", "prefer_not_to_say")
+
+  // Additional metrics
+  bodyFat   Float?   // Body fat percentage
+  muscleMass Float?  // Muscle mass in kilograms
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_metrics")
 }
