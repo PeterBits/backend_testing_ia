@@ -140,3 +140,5 @@ Desktop.ini
 # PM2 files
 ecosystem.config.js
 .pm2/
+
+.claude
