@@ -1,8 +1,10 @@
 const express = require("express");
-const { authenticateToken } = require("../middlewares/auth");
+const { authenticateToken, requireRole } = require("../middlewares/auth");
 const {
   RoutineController,
   routineValidation,
+  assignRoutineValidation,
+  addAthleteValidation,
 } = require("../controllers/routines");
 
 const router = express.Router();
@@ -51,5 +53,62 @@ router.put("/:id", routineValidation, RoutineController.updateRoutine);
  * @access  Private
  */
 router.delete("/:id", RoutineController.deleteRoutine);
+
+/**
+ * @route   POST /api/routines/assign
+ * @desc    Assign a routine to an athlete (TRAINER only)
+ * @access  Private (TRAINER)
+ */
+router.post(
+  "/assign",
+  requireRole("TRAINER"),
+  assignRoutineValidation,
+  RoutineController.assignRoutineToAthlete
+);
+
+/**
+ * @route   GET /api/routines/athletes
+ * @desc    Get all athletes for a trainer (TRAINER only)
+ * @access  Private (TRAINER)
+ */
+router.get(
+  "/athletes",
+  requireRole("TRAINER"),
+  RoutineController.getTrainerAthletes
+);
+
+/**
+ * @route   POST /api/routines/athletes
+ * @desc    Add an athlete to a trainer (TRAINER only)
+ * @access  Private (TRAINER)
+ */
+router.post(
+  "/athletes",
+  requireRole("TRAINER"),
+  addAthleteValidation,
+  RoutineController.addAthlete
+);
+
+/**
+ * @route   DELETE /api/routines/athletes/:athleteId
+ * @desc    Remove an athlete from a trainer (TRAINER only)
+ * @access  Private (TRAINER)
+ */
+router.delete(
+  "/athletes/:athleteId",
+  requireRole("TRAINER"),
+  RoutineController.removeAthlete
+);
+
+/**
+ * @route   GET /api/routines/trainers
+ * @desc    Get all trainers for an athlete (ATHLETE only)
+ * @access  Private (ATHLETE)
+ */
+router.get(
+  "/trainers",
+  requireRole("ATHLETE"),
+  RoutineController.getAthleteTrainers
+);
 
 module.exports = router;
