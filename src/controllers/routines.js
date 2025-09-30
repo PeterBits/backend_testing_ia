@@ -158,6 +158,7 @@ class RoutineController {
             exerciseId: exercise.exerciseId,
             sets: exercise.sets,
             reps: exercise.reps,
+            weight: exercise.weight || null,
             rest: exercise.rest || null,
             order: exercise.order || index + 1,
           }));
@@ -261,6 +262,7 @@ class RoutineController {
               exerciseId: exercise.exerciseId,
               sets: exercise.sets,
               reps: exercise.reps,
+              weight: exercise.weight || null,
               rest: exercise.rest || null,
               order: exercise.order || index + 1,
             }));
@@ -396,6 +398,7 @@ class RoutineController {
             exerciseId: exercise.exerciseId,
             sets: exercise.sets,
             reps: exercise.reps,
+            weight: exercise.weight || null,
             rest: exercise.rest || null,
             order: exercise.order || index + 1,
           }));
@@ -742,6 +745,11 @@ const routineValidation = [
       if (!Number.isInteger(value.reps) || value.reps < 1 || value.reps > 500)
         return false;
       if (
+        value.weight !== undefined &&
+        (typeof value.weight !== "number" || value.weight < 0 || value.weight > 1000)
+      )
+        return false;
+      if (
         value.rest !== undefined &&
         (!Number.isInteger(value.rest) || value.rest < 0 || value.rest > 3600)
       )
@@ -753,7 +761,7 @@ const routineValidation = [
         return false;
       return true;
     })
-    .withMessage("Invalid exercise data - must include exerciseId, sets, reps"),
+    .withMessage("Invalid exercise data - must include exerciseId, sets, reps. Weight (0-1000kg) is optional"),
 ];
 
 const assignRoutineValidation = [
@@ -784,6 +792,11 @@ const assignRoutineValidation = [
       if (!Number.isInteger(value.reps) || value.reps < 1 || value.reps > 500)
         return false;
       if (
+        value.weight !== undefined &&
+        (typeof value.weight !== "number" || value.weight < 0 || value.weight > 1000)
+      )
+        return false;
+      if (
         value.rest !== undefined &&
         (!Number.isInteger(value.rest) || value.rest < 0 || value.rest > 3600)
       )
@@ -795,7 +808,7 @@ const assignRoutineValidation = [
         return false;
       return true;
     })
-    .withMessage("Invalid exercise data - must include exerciseId, sets, reps"),
+    .withMessage("Invalid exercise data - must include exerciseId, sets, reps. Weight (0-1000kg) is optional"),
 ];
 
 const addAthleteValidation = [
