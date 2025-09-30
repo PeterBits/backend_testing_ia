@@ -38,31 +38,44 @@ model User {
 }
 
 model Routine {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String?
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      Int
-  creator     User      @relation("RoutineCreator", fields: [createdBy], references: [id], onDelete: Cascade)
-  createdBy   Int
-  exercises   Exercise[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id               Int               @id @default(autoincrement())
+  title            String
+  description      String?
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           Int
+  creator          User              @relation("RoutineCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  createdBy        Int
+  routineExercises RoutineExercise[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@map("routines")
 }
 
 model Exercise {
-  id        Int     @id @default(autoincrement())
-  name      String
-  sets      Int
-  reps      Int
-  rest      Int?    // Rest time in seconds
-  order     Int?    // Order in the routine
-  routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
-  routineId Int
+  id               Int               @id @default(autoincrement())
+  name             String
+  description      String?
+  routineExercises RoutineExercise[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@map("exercises")
+}
+
+model RoutineExercise {
+  id         Int      @id @default(autoincrement())
+  routine    Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  routineId  Int
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  exerciseId Int
+  sets       Int      // Number of sets
+  reps       Int      // Number of repetitions
+  rest       Int?     // Rest time in seconds
+  order      Int      // Order in the routine
+  createdAt  DateTime @default(now())
+
+  @@map("routine_exercises")
 }
 
 model TrainerAthlete {
