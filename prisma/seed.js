@@ -8,6 +8,7 @@ async function main() {
 
   // Clear existing data
   console.log("🧹 Cleaning existing data...");
+  await prisma.routineExercise.deleteMany();
   await prisma.exercise.deleteMany();
   await prisma.routine.deleteMany();
   await prisma.trainerAthlete.deleteMany();
@@ -86,315 +87,414 @@ async function main() {
     ],
   });
 
-  // Create routines for athletes (created by themselves)
-  console.log("💪 Creating self-created routines...");
+  // Create Exercise Catalog
+  console.log("📚 Creating exercise catalog...");
+  const sentadillas = await prisma.exercise.create({
+    data: {
+      name: "Sentadillas",
+      description: "Ejercicio compuesto para tren inferior que trabaja cuádriceps, glúteos e isquiotibiales",
+    },
+  });
+
+  const pressBanca = await prisma.exercise.create({
+    data: {
+      name: "Press de Banca",
+      description: "Ejercicio fundamental para pecho, hombros y tríceps",
+    },
+  });
+
+  const pesoMuerto = await prisma.exercise.create({
+    data: {
+      name: "Peso Muerto",
+      description: "Ejercicio compuesto que trabaja toda la cadena posterior",
+    },
+  });
+
+  const pressInclinado = await prisma.exercise.create({
+    data: {
+      name: "Press Inclinado con Mancuernas",
+      description: "Variante de press que enfatiza el pectoral superior",
+    },
+  });
+
+  const remoBarra = await prisma.exercise.create({
+    data: {
+      name: "Remo con Barra",
+      description: "Ejercicio para espalda media y dorsales",
+    },
+  });
+
+  const curlBiceps = await prisma.exercise.create({
+    data: {
+      name: "Curl de Bíceps",
+      description: "Ejercicio de aislamiento para bíceps",
+    },
+  });
+
+  const fondos = await prisma.exercise.create({
+    data: {
+      name: "Fondos en Paralelas",
+      description: "Ejercicio compuesto para pecho y tríceps",
+    },
+  });
+
+  const sentadillaBulgara = await prisma.exercise.create({
+    data: {
+      name: "Sentadilla Búlgara",
+      description: "Sentadilla unilateral para cuádriceps y glúteos",
+    },
+  });
+
+  const prensaPiernas = await prisma.exercise.create({
+    data: {
+      name: "Prensa de Piernas",
+      description: "Ejercicio de máquina para tren inferior",
+    },
+  });
+
+  const pesoMuertoRumano = await prisma.exercise.create({
+    data: {
+      name: "Peso Muerto Rumano",
+      description: "Variante que enfatiza isquiotibiales y glúteos",
+    },
+  });
+
+  const extensiones = await prisma.exercise.create({
+    data: {
+      name: "Extensiones de Cuádriceps",
+      description: "Ejercicio de aislamiento para cuádriceps",
+    },
+  });
+
+  const burpees = await prisma.exercise.create({
+    data: {
+      name: "Burpees",
+      description: "Ejercicio cardiovascular de cuerpo completo de alta intensidad",
+    },
+  });
+
+  const mountainClimbers = await prisma.exercise.create({
+    data: {
+      name: "Mountain Climbers",
+      description: "Ejercicio de cardio que trabaja core y resistencia",
+    },
+  });
+
+  const jumpingJacks = await prisma.exercise.create({
+    data: {
+      name: "Jumping Jacks",
+      description: "Ejercicio cardiovascular clásico",
+    },
+  });
+
+  const sprints = await prisma.exercise.create({
+    data: {
+      name: "Sprints en Cinta",
+      description: "Intervalos de sprint de alta intensidad",
+    },
+  });
+
+  const kettlebellSwings = await prisma.exercise.create({
+    data: {
+      name: "Kettlebell Swings",
+      description: "Ejercicio balístico para cadena posterior y cardio",
+    },
+  });
+
+  const flexiones = await prisma.exercise.create({
+    data: {
+      name: "Flexiones",
+      description: "Ejercicio clásico de peso corporal para pecho y brazos",
+    },
+  });
+
+  const sentadillaSalto = await prisma.exercise.create({
+    data: {
+      name: "Sentadillas con Salto",
+      description: "Ejercicio pliométrico para potencia de piernas",
+    },
+  });
+
+  const plancha = await prisma.exercise.create({
+    data: {
+      name: "Plancha",
+      description: "Ejercicio isométrico para fortalecimiento de core",
+    },
+  });
+
+  const dominadas = await prisma.exercise.create({
+    data: {
+      name: "Dominadas",
+      description: "Ejercicio fundamental de tracción para espalda",
+    },
+  });
+
+  const pressMilitar = await prisma.exercise.create({
+    data: {
+      name: "Press Militar",
+      description: "Ejercicio compuesto para hombros",
+    },
+  });
+
+  // Create routines with exercises
+  console.log("💪 Creating routines with exercises...");
+
+  // Routine 1: Fuerza - Principiante (self-created by athlete1)
   const routine1 = await prisma.routine.create({
     data: {
       title: "Rutina de Fuerza - Principiante",
       description: "Rutina básica para desarrollar fuerza general",
       userId: athlete1.id,
       createdBy: athlete1.id,
-      exercises: {
-        create: [
-          {
-            name: "Sentadillas",
-            sets: 3,
-            reps: 12,
-            rest: 90,
-            order: 1,
-          },
-          {
-            name: "Press de Banca",
-            sets: 3,
-            reps: 10,
-            rest: 120,
-            order: 2,
-          },
-          {
-            name: "Peso Muerto",
-            sets: 3,
-            reps: 8,
-            rest: 120,
-            order: 3,
-          },
-        ],
-      },
     },
   });
 
-  // Create routines assigned by trainers to athletes
-  console.log("🎯 Creating trainer-assigned routines...");
+  await prisma.routineExercise.createMany({
+    data: [
+      {
+        routineId: routine1.id,
+        exerciseId: sentadillas.id,
+        sets: 3,
+        reps: 12,
+        rest: 90,
+        order: 1,
+      },
+      {
+        routineId: routine1.id,
+        exerciseId: pressBanca.id,
+        sets: 3,
+        reps: 10,
+        rest: 120,
+        order: 2,
+      },
+      {
+        routineId: routine1.id,
+        exerciseId: pesoMuerto.id,
+        sets: 3,
+        reps: 8,
+        rest: 120,
+        order: 3,
+      },
+    ],
+  });
+
+  // Routine 2: Hipertrofia Tren Superior (trainer1 → athlete1)
   const routine2 = await prisma.routine.create({
     data: {
       title: "Hipertrofia - Tren Superior",
       description: "Rutina de volumen para pecho, espalda y brazos",
       userId: athlete1.id,
       createdBy: trainer1.id,
-      exercises: {
-        create: [
-          {
-            name: "Press Inclinado con Mancuernas",
-            sets: 4,
-            reps: 10,
-            rest: 90,
-            order: 1,
-          },
-          {
-            name: "Remo con Barra",
-            sets: 4,
-            reps: 10,
-            rest: 90,
-            order: 2,
-          },
-          {
-            name: "Curl de Bíceps",
-            sets: 3,
-            reps: 12,
-            rest: 60,
-            order: 3,
-          },
-          {
-            name: "Fondos en Paralelas",
-            sets: 3,
-            reps: 12,
-            rest: 60,
-            order: 4,
-          },
-        ],
-      },
     },
   });
 
+  await prisma.routineExercise.createMany({
+    data: [
+      {
+        routineId: routine2.id,
+        exerciseId: pressInclinado.id,
+        sets: 4,
+        reps: 10,
+        rest: 90,
+        order: 1,
+      },
+      {
+        routineId: routine2.id,
+        exerciseId: remoBarra.id,
+        sets: 4,
+        reps: 10,
+        rest: 90,
+        order: 2,
+      },
+      {
+        routineId: routine2.id,
+        exerciseId: curlBiceps.id,
+        sets: 3,
+        reps: 12,
+        rest: 60,
+        order: 3,
+      },
+      {
+        routineId: routine2.id,
+        exerciseId: fondos.id,
+        sets: 3,
+        reps: 12,
+        rest: 60,
+        order: 4,
+      },
+    ],
+  });
+
+  // Routine 3: Hipertrofia Tren Inferior (trainer1 → athlete1)
   const routine3 = await prisma.routine.create({
     data: {
       title: "Hipertrofia - Tren Inferior",
       description: "Rutina de volumen para piernas y glúteos",
       userId: athlete1.id,
       createdBy: trainer1.id,
-      exercises: {
-        create: [
-          {
-            name: "Sentadilla Búlgara",
-            sets: 4,
-            reps: 10,
-            rest: 90,
-            order: 1,
-          },
-          {
-            name: "Prensa de Piernas",
-            sets: 4,
-            reps: 12,
-            rest: 90,
-            order: 2,
-          },
-          {
-            name: "Peso Muerto Rumano",
-            sets: 3,
-            reps: 10,
-            rest: 90,
-            order: 3,
-          },
-          {
-            name: "Extensiones de Cuádriceps",
-            sets: 3,
-            reps: 15,
-            rest: 60,
-            order: 4,
-          },
-        ],
-      },
     },
   });
 
+  await prisma.routineExercise.createMany({
+    data: [
+      {
+        routineId: routine3.id,
+        exerciseId: sentadillaBulgara.id,
+        sets: 4,
+        reps: 10,
+        rest: 90,
+        order: 1,
+      },
+      {
+        routineId: routine3.id,
+        exerciseId: prensaPiernas.id,
+        sets: 4,
+        reps: 12,
+        rest: 90,
+        order: 2,
+      },
+      {
+        routineId: routine3.id,
+        exerciseId: pesoMuertoRumano.id,
+        sets: 3,
+        reps: 10,
+        rest: 90,
+        order: 3,
+      },
+      {
+        routineId: routine3.id,
+        exerciseId: extensiones.id,
+        sets: 3,
+        reps: 15,
+        rest: 60,
+        order: 4,
+      },
+    ],
+  });
+
+  // Routine 4: Cardio HIIT (trainer1 → athlete2)
   const routine4 = await prisma.routine.create({
     data: {
       title: "Cardio HIIT",
       description: "Entrenamiento de intervalos de alta intensidad",
       userId: athlete2.id,
       createdBy: trainer1.id,
-      exercises: {
-        create: [
-          {
-            name: "Burpees",
-            sets: 4,
-            reps: 15,
-            rest: 30,
-            order: 1,
-          },
-          {
-            name: "Mountain Climbers",
-            sets: 4,
-            reps: 20,
-            rest: 30,
-            order: 2,
-          },
-          {
-            name: "Jumping Jacks",
-            sets: 4,
-            reps: 30,
-            rest: 30,
-            order: 3,
-          },
-          {
-            name: "Sprints en Cinta",
-            sets: 5,
-            reps: 1,
-            rest: 60,
-            order: 4,
-          },
-        ],
-      },
     },
   });
 
+  await prisma.routineExercise.createMany({
+    data: [
+      {
+        routineId: routine4.id,
+        exerciseId: burpees.id,
+        sets: 4,
+        reps: 15,
+        rest: 30,
+        order: 1,
+      },
+      {
+        routineId: routine4.id,
+        exerciseId: mountainClimbers.id,
+        sets: 4,
+        reps: 20,
+        rest: 30,
+        order: 2,
+      },
+      {
+        routineId: routine4.id,
+        exerciseId: jumpingJacks.id,
+        sets: 4,
+        reps: 30,
+        rest: 30,
+        order: 3,
+      },
+      {
+        routineId: routine4.id,
+        exerciseId: sprints.id,
+        sets: 5,
+        reps: 1,
+        rest: 60,
+        order: 4,
+      },
+    ],
+  });
+
+  // Routine 5: Funcional Full Body (trainer1 → athlete3)
   const routine5 = await prisma.routine.create({
     data: {
       title: "Funcional - Full Body",
       description: "Entrenamiento funcional de cuerpo completo",
       userId: athlete3.id,
       createdBy: trainer1.id,
-      exercises: {
-        create: [
-          {
-            name: "Kettlebell Swings",
-            sets: 4,
-            reps: 15,
-            rest: 60,
-            order: 1,
-          },
-          {
-            name: "Flexiones",
-            sets: 3,
-            reps: 15,
-            rest: 60,
-            order: 2,
-          },
-          {
-            name: "Sentadillas con Salto",
-            sets: 3,
-            reps: 12,
-            rest: 60,
-            order: 3,
-          },
-          {
-            name: "Plancha",
-            sets: 3,
-            reps: 1,
-            rest: 45,
-            order: 4,
-          },
-        ],
-      },
     },
   });
 
+  await prisma.routineExercise.createMany({
+    data: [
+      {
+        routineId: routine5.id,
+        exerciseId: kettlebellSwings.id,
+        sets: 4,
+        reps: 15,
+        rest: 60,
+        order: 1,
+      },
+      {
+        routineId: routine5.id,
+        exerciseId: flexiones.id,
+        sets: 3,
+        reps: 15,
+        rest: 60,
+        order: 2,
+      },
+      {
+        routineId: routine5.id,
+        exerciseId: sentadillaSalto.id,
+        sets: 3,
+        reps: 12,
+        rest: 60,
+        order: 3,
+      },
+      {
+        routineId: routine5.id,
+        exerciseId: plancha.id,
+        sets: 3,
+        reps: 1,
+        rest: 45,
+        order: 4,
+      },
+    ],
+  });
+
+  // Routine 6: Personal de athlete2
   const routine6 = await prisma.routine.create({
-    data: {
-      title: "Movilidad y Flexibilidad",
-      description: "Rutina de estiramiento y movilidad articular",
-      userId: athlete3.id,
-      createdBy: trainer2.id,
-      exercises: {
-        create: [
-          {
-            name: "Estiramiento de Isquiotibiales",
-            sets: 3,
-            reps: 1,
-            rest: 30,
-            order: 1,
-          },
-          {
-            name: "Rotaciones de Cadera",
-            sets: 3,
-            reps: 10,
-            rest: 30,
-            order: 2,
-          },
-          {
-            name: "Estiramiento de Pectorales",
-            sets: 3,
-            reps: 1,
-            rest: 30,
-            order: 3,
-          },
-          {
-            name: "Yoga - Postura del Perro",
-            sets: 3,
-            reps: 1,
-            rest: 30,
-            order: 4,
-          },
-        ],
-      },
-    },
-  });
-
-  const routine7 = await prisma.routine.create({
-    data: {
-      title: "Pérdida de Grasa - Circuito",
-      description: "Circuito de ejercicios para quemar grasa",
-      userId: athlete4.id,
-      createdBy: trainer2.id,
-      exercises: {
-        create: [
-          {
-            name: "Zancadas Alternas",
-            sets: 4,
-            reps: 20,
-            rest: 45,
-            order: 1,
-          },
-          {
-            name: "Remo con TRX",
-            sets: 4,
-            reps: 15,
-            rest: 45,
-            order: 2,
-          },
-          {
-            name: "Battle Ropes",
-            sets: 4,
-            reps: 1,
-            rest: 45,
-            order: 3,
-          },
-          {
-            name: "Box Jumps",
-            sets: 4,
-            reps: 10,
-            rest: 60,
-            order: 4,
-          },
-        ],
-      },
-    },
-  });
-
-  const routine8 = await prisma.routine.create({
     data: {
       title: "Mi Rutina Personal",
       description: "Rutina creada por mí mismo",
       userId: athlete2.id,
       createdBy: athlete2.id,
-      exercises: {
-        create: [
-          {
-            name: "Dominadas",
-            sets: 3,
-            reps: 8,
-            rest: 120,
-            order: 1,
-          },
-          {
-            name: "Press Militar",
-            sets: 3,
-            reps: 10,
-            rest: 90,
-            order: 2,
-          },
-        ],
-      },
     },
+  });
+
+  await prisma.routineExercise.createMany({
+    data: [
+      {
+        routineId: routine6.id,
+        exerciseId: dominadas.id,
+        sets: 3,
+        reps: 8,
+        rest: 120,
+        order: 1,
+      },
+      {
+        routineId: routine6.id,
+        exerciseId: pressMilitar.id,
+        sets: 3,
+        reps: 10,
+        rest: 90,
+        order: 2,
+      },
+    ],
   });
 
   console.log("✅ Seed completed successfully!");
@@ -402,7 +502,8 @@ async function main() {
   console.log(`  - 2 Trainers`);
   console.log(`  - 4 Athletes`);
   console.log(`  - 5 Trainer-Athlete relationships`);
-  console.log(`  - 8 Routines with exercises`);
+  console.log(`  - 21 Exercises in catalog`);
+  console.log(`  - 6 Routines with assigned exercises`);
   console.log("\n🔐 Login credentials (all users):");
   console.log(`  Password: Password123`);
   console.log("\n👨‍🏫 Trainers:");
