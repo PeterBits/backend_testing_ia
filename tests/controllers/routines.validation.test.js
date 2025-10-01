@@ -386,7 +386,6 @@ describe("Routine Validation", () => {
     });
   });
 
-
   describe("assignRoutineValidation - exercises field validation", () => {
     it("should fail when exerciseId is invalid", async () => {
       mockReq.body = {

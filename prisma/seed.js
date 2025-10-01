@@ -126,7 +126,8 @@ async function main() {
   const sentadillas = await prisma.exercise.create({
     data: {
       name: "Sentadillas",
-      description: "Ejercicio compuesto para tren inferior que trabaja cuádriceps, glúteos e isquiotibiales",
+      description:
+        "Ejercicio compuesto para tren inferior que trabaja cuádriceps, glúteos e isquiotibiales",
     },
   });
 
@@ -203,7 +204,8 @@ async function main() {
   const burpees = await prisma.exercise.create({
     data: {
       name: "Burpees",
-      description: "Ejercicio cardiovascular de cuerpo completo de alta intensidad",
+      description:
+        "Ejercicio cardiovascular de cuerpo completo de alta intensidad",
     },
   });
 

@@ -95,7 +95,12 @@ describe("RoutineController", () => {
               exercise: { id: 1, name: "Bench Press", description: null },
             },
           ],
-          creator: { id: 1, name: "Test User", email: "test@example.com", role: "ATHLETE" },
+          creator: {
+            id: 1,
+            name: "Test User",
+            email: "test@example.com",
+            role: "ATHLETE",
+          },
           _count: { routineExercises: 1 },
           updatedAt: new Date(),
         },
@@ -142,7 +147,9 @@ describe("RoutineController", () => {
     });
 
     it("should return 500 if database error occurs", async () => {
-      mockPrisma.routine.findMany.mockRejectedValue(new Error("Database error"));
+      mockPrisma.routine.findMany.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await RoutineController.getUserRoutines(mockReq, mockRes);
 
@@ -163,8 +170,18 @@ describe("RoutineController", () => {
         userId: 1,
         createdBy: 1,
         routineExercises: [],
-        user: { id: 1, name: "Test User", email: "test@example.com", role: "ATHLETE" },
-        creator: { id: 1, name: "Test User", email: "test@example.com", role: "ATHLETE" },
+        user: {
+          id: 1,
+          name: "Test User",
+          email: "test@example.com",
+          role: "ATHLETE",
+        },
+        creator: {
+          id: 1,
+          name: "Test User",
+          email: "test@example.com",
+          role: "ATHLETE",
+        },
       };
 
       mockReq.params.id = "1";
@@ -194,13 +211,16 @@ describe("RoutineController", () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: "Routine not found",
-        message: "The requested routine does not exist or you do not have access to it.",
+        message:
+          "The requested routine does not exist or you do not have access to it.",
       });
     });
 
     it("should return 500 if database error occurs", async () => {
       mockReq.params.id = "1";
-      mockPrisma.routine.findFirst.mockRejectedValue(new Error("Database error"));
+      mockPrisma.routine.findFirst.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await RoutineController.getRoutineById(mockReq, mockRes);
 
@@ -655,7 +675,8 @@ describe("RoutineController", () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: "Routine not found",
-        message: "The requested routine does not exist or you do not have permission to edit it.",
+        message:
+          "The requested routine does not exist or you do not have permission to edit it.",
       });
     });
 
@@ -848,7 +869,9 @@ describe("RoutineController", () => {
       mockReq.params.id = "1";
       mockReq.body = { title: "Updated Title" };
 
-      mockPrisma.routine.findFirst.mockRejectedValue(new Error("Database error"));
+      mockPrisma.routine.findFirst.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await RoutineController.updateRoutine(mockReq, mockRes);
 
@@ -901,14 +924,17 @@ describe("RoutineController", () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: "Routine not found",
-        message: "The requested routine does not exist or you do not have permission to delete it.",
+        message:
+          "The requested routine does not exist or you do not have permission to delete it.",
       });
     });
 
     it("should return 500 if database error occurs", async () => {
       mockReq.params.id = "1";
 
-      mockPrisma.routine.findFirst.mockRejectedValue(new Error("Database error"));
+      mockPrisma.routine.findFirst.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await RoutineController.deleteRoutine(mockReq, mockRes);
 
@@ -1264,7 +1290,9 @@ describe("RoutineController", () => {
     it("should return 500 if database error occurs", async () => {
       mockReq.body = validAssignData;
 
-      mockPrisma.trainerAthlete.findFirst.mockRejectedValue(new Error("Database error"));
+      mockPrisma.trainerAthlete.findFirst.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await RoutineController.assignRoutineToAthlete(mockReq, mockRes);
 
@@ -1319,7 +1347,9 @@ describe("RoutineController", () => {
     });
 
     it("should return 500 if database error occurs", async () => {
-      mockPrisma.trainerAthlete.findMany.mockRejectedValue(new Error("Database error"));
+      mockPrisma.trainerAthlete.findMany.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await RoutineController.getTrainerAthletes(mockReq, mockRes);
 
@@ -1371,7 +1401,9 @@ describe("RoutineController", () => {
     });
 
     it("should return 500 if database error occurs", async () => {
-      mockPrisma.trainerAthlete.findMany.mockRejectedValue(new Error("Database error"));
+      mockPrisma.trainerAthlete.findMany.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await RoutineController.getAthleteTrainers(mockReq, mockRes);
 
@@ -1438,9 +1470,7 @@ describe("RoutineController", () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         error: "Validation failed",
         message: "Please check your input data.",
-        details: [
-          { msg: "Valid athlete ID is required", param: "athleteId" },
-        ],
+        details: [{ msg: "Valid athlete ID is required", param: "athleteId" }],
       });
     });
 
@@ -1558,7 +1588,9 @@ describe("RoutineController", () => {
     it("should return 500 if database error occurs", async () => {
       mockReq.params.athleteId = "2";
 
-      mockPrisma.trainerAthlete.findFirst.mockRejectedValue(new Error("Database error"));
+      mockPrisma.trainerAthlete.findFirst.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await RoutineController.removeAthlete(mockReq, mockRes);
 

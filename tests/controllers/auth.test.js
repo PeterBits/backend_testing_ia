@@ -220,9 +220,7 @@ describe("AuthController", () => {
     it("should return 500 if database error occurs", async () => {
       mockReq.body = validRegisterData;
 
-      mockPrisma.user.findUnique.mockRejectedValue(
-        new Error("Database error")
-      );
+      mockPrisma.user.findUnique.mockRejectedValue(new Error("Database error"));
 
       await AuthController.register(mockReq, mockRes);
 
@@ -340,9 +338,7 @@ describe("AuthController", () => {
     it("should return 500 if database error occurs", async () => {
       mockReq.body = validLoginData;
 
-      mockPrisma.user.findUnique.mockRejectedValue(
-        new Error("Database error")
-      );
+      mockPrisma.user.findUnique.mockRejectedValue(new Error("Database error"));
 
       await AuthController.login(mockReq, mockRes);
 
@@ -656,9 +652,7 @@ describe("AuthController", () => {
     });
 
     it("should return 500 if database error occurs", async () => {
-      mockPrisma.user.findUnique.mockRejectedValue(
-        new Error("Database error")
-      );
+      mockPrisma.user.findUnique.mockRejectedValue(new Error("Database error"));
 
       await AuthController.changePassword(mockReq, mockRes);
 

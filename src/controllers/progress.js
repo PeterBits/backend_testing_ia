@@ -485,17 +485,14 @@ class ProgressController {
       // Calculate progress statistics
       const stats = {
         totalSessions: history.length,
-        maxWeight: history.reduce(
-          (max, h) => Math.max(max, h.weight || 0),
-          0
-        ),
+        maxWeight: history.reduce((max, h) => Math.max(max, h.weight || 0), 0),
         maxReps: history.reduce((max, h) => Math.max(max, h.reps || 0), 0),
         avgWeight:
           history.reduce((sum, h) => sum + (h.weight || 0), 0) /
-            (history.length || 1),
+          (history.length || 1),
         avgReps:
           history.reduce((sum, h) => sum + (h.reps || 0), 0) /
-            (history.length || 1),
+          (history.length || 1),
       };
 
       res.json({

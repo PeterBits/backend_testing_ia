@@ -107,10 +107,7 @@ describe("ProgressController", () => {
     });
 
     it("should create a workout session with exercises", async () => {
-      const mockExercises = [
-        { id: 1 },
-        { id: 2 },
-      ];
+      const mockExercises = [{ id: 1 }, { id: 2 }];
 
       const mockSession = {
         id: 1,
@@ -155,7 +152,15 @@ describe("ProgressController", () => {
         completedAt: new Date().toISOString(),
         duration: 3600,
         exercises: [
-          { exerciseId: 1, sets: 4, reps: 10, weight: 100, rest: 90, order: 1, notes: "PR!" },
+          {
+            exerciseId: 1,
+            sets: 4,
+            reps: 10,
+            weight: 100,
+            rest: 90,
+            order: 1,
+            notes: "PR!",
+          },
           { exerciseId: 2, sets: 3, reps: 12, weight: 60, rest: 60, order: 2 },
         ],
       };
@@ -616,7 +621,10 @@ describe("ProgressController", () => {
         limit: "10",
       };
 
-      mockPrisma.exercise.findUnique.mockResolvedValue({ id: 1, name: "Squat" });
+      mockPrisma.exercise.findUnique.mockResolvedValue({
+        id: 1,
+        name: "Squat",
+      });
       mockPrisma.sessionExercise.findMany.mockResolvedValue([]);
 
       await ProgressController.getExerciseProgress(mockReq, mockRes);

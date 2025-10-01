@@ -746,7 +746,9 @@ const routineValidation = [
         return false;
       if (
         value.weight !== undefined &&
-        (typeof value.weight !== "number" || value.weight < 0 || value.weight > 1000)
+        (typeof value.weight !== "number" ||
+          value.weight < 0 ||
+          value.weight > 1000)
       )
         return false;
       if (
@@ -761,7 +763,9 @@ const routineValidation = [
         return false;
       return true;
     })
-    .withMessage("Invalid exercise data - must include exerciseId, sets, reps. Weight (0-1000kg) is optional"),
+    .withMessage(
+      "Invalid exercise data - must include exerciseId, sets, reps. Weight (0-1000kg) is optional"
+    ),
 ];
 
 const assignRoutineValidation = [
@@ -793,7 +797,9 @@ const assignRoutineValidation = [
         return false;
       if (
         value.weight !== undefined &&
-        (typeof value.weight !== "number" || value.weight < 0 || value.weight > 1000)
+        (typeof value.weight !== "number" ||
+          value.weight < 0 ||
+          value.weight > 1000)
       )
         return false;
       if (
@@ -808,7 +814,9 @@ const assignRoutineValidation = [
         return false;
       return true;
     })
-    .withMessage("Invalid exercise data - must include exerciseId, sets, reps. Weight (0-1000kg) is optional"),
+    .withMessage(
+      "Invalid exercise data - must include exerciseId, sets, reps. Weight (0-1000kg) is optional"
+    ),
 ];
 
 const addAthleteValidation = [

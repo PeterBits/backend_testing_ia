@@ -154,7 +154,9 @@ const metricsValidation = [
   body("gender")
     .optional()
     .isIn(["male", "female", "other", "prefer_not_to_say"])
-    .withMessage("Gender must be one of: male, female, other, prefer_not_to_say"),
+    .withMessage(
+      "Gender must be one of: male, female, other, prefer_not_to_say"
+    ),
   body("bodyFat")
     .optional()
     .isFloat({ min: 0, max: 100 })
