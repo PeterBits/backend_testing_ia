@@ -10,6 +10,7 @@ const authRoutes = require("./routes/auth");
 const routineRoutes = require("./routes/routines");
 const exerciseRoutes = require("./routes/exercises");
 const metricsRoutes = require("./routes/metrics");
+const progressRoutes = require("./routes/progress");
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/routines", routineRoutes);
 app.use("/api/exercises", exerciseRoutes);
 app.use("/api/metrics", metricsRoutes);
+app.use("/api/progress", progressRoutes);
 
 // 404 handler
 app.use((req, res, next) => {
