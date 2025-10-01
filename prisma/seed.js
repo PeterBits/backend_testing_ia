@@ -16,7 +16,7 @@ async function main() {
 
   // Hash password for all users (same password for simplicity in development)
   const hashedPassword = await bcrypt.hash("Password123", 12);
-  const adminPassword = await bcrypt.hash("admin", 12);
+  const adminPassword = await bcrypt.hash("admin1", 12);
 
   // Create Admin User
   console.log("👑 Creating admin user...");

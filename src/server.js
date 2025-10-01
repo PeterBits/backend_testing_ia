@@ -23,7 +23,11 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? ["https://your-frontend-domain.com"]
-        : ["http://localhost:3000", "http://localhost:5173"], // React/Vite dev servers
+        : [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:5174",
+          ], // React/Vite dev servers
     credentials: true,
   })
 );
