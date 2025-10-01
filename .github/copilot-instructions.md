@@ -1,8 +1,8 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
-# Copilot Instructions for Gym Backend API
+# Copilot Instructions for GAINZ Backend API
 
-This is a Node.js backend API for a gym routine tracking application. Please follow these guidelines when suggesting code:
+This is a Node.js backend API for the GAINZ fitness tracking application. Please follow these guidelines when suggesting code:
 
 ## Project Context
 

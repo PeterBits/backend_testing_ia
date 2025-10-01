@@ -35,8 +35,8 @@ class AuthUtils {
 
     return jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn,
-      issuer: "gym-backend",
-      audience: "gym-app",
+      issuer: "gainz-backend",
+      audience: "gainz-app",
     });
   }
 
@@ -52,8 +52,8 @@ class AuthUtils {
 
     try {
       return jwt.verify(token, process.env.JWT_SECRET, {
-        issuer: "gym-backend",
-        audience: "gym-app",
+        issuer: "gainz-backend",
+        audience: "gainz-app",
       });
     } catch (error) {
       if (error.name === "TokenExpiredError") {

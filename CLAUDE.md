@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-REST API backend for a gym routine tracking application built with Node.js, Express, Prisma ORM, and SQLite (development) / PostgreSQL (production). Supports JWT authentication, role-based access control (ATHLETE/TRAINER), and full CRUD operations for workout routines and exercises. Trainers can manage multiple athletes and assign routines to them.
+REST API backend for GAINZ fitness tracking application built with Node.js, Express, Prisma ORM, and SQLite (development) / PostgreSQL (production). Supports JWT authentication, role-based access control (ATHLETE/TRAINER), and full CRUD operations for workout routines and exercises. Trainers can manage multiple athletes and assign routines to them.
 
 ## Development Commands
 
@@ -57,7 +57,7 @@ Eight main models with cascading deletes:
 ### Authentication Flow
 
 1. JWT tokens generated with 7-day expiration (configurable)
-2. Tokens include `issuer: "gym-backend"`, `audience: "gym-app"`, and `role`
+2. Tokens include `issuer: "gainz-backend"`, `audience: "gainz-app"`, and `role`
 3. Middleware extracts user from token and attaches to `req.user` (includes role) and `req.userId`
 4. Role-based middleware `requireRole()` restricts endpoints by user role
 5. Password hashing uses bcrypt with 12 rounds
