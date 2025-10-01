@@ -42,14 +42,16 @@ npm run prisma:generate                          # Shortcut for generate
 
 ### Database Schema (Prisma)
 
-Six main models with cascading deletes:
-- **User** (with Role: ATHLETE or TRAINER) → has many **Routine** → has one **UserMetrics**
+Eight main models with cascading deletes:
+- **User** (with Role: ATHLETE or TRAINER) → has many **Routine**, **WorkoutSession** → has one **UserMetrics**
 - **Exercise** - Catalog of exercises (id, name, description)
 - **Routine** - Workout routines with `userId` (owner) and `createdBy` (creator)
 - **RoutineExercise** - Join table linking routines to exercises with sets, reps, weight, rest, order
 - **TrainerAthlete** - Join table for N:N relationship between trainers and athletes
 - **UserMetrics** - Optional body metrics (height, weight, age, gender, bodyFat, muscleMass)
-- All relationships use `onDelete: Cascade`
+- **WorkoutSession** - Logged workout sessions with startedAt, completedAt, duration, notes, optional routineId
+- **SessionExercise** - Join table linking sessions to exercises with actual performed sets, reps, weight, rest, order, notes
+- All relationships use `onDelete: Cascade` or `SetNull` (for optional routine reference in sessions)
 - Database service is a singleton accessible via `databaseService.getClient()`
 
 ### Authentication Flow
@@ -72,9 +74,22 @@ Six main models with cascading deletes:
   - Trainers can assign routines to their athletes
 - **Routine ownership**: `userId` = owner, `createdBy` = creator (may differ if trainer assigns to athlete)
 
+### Progress Tracking
+
+- **Workout Sessions**: Users log actual workout sessions with exercises performed
+- **Session-Routine Link**: Sessions can optionally reference a routine (for tracking routine completion)
+- **Create/Update**: Uses Prisma transactions to ensure atomicity
+- **Update behavior**: When exercises array is provided, ALL existing session exercises are deleted and replaced
+- **Session states**: In-progress (no `completedAt`) or completed (with `completedAt` timestamp)
+- **Progress history**: Track weight, reps, sets over time for each exercise
+- **Statistics**: Calculate total sessions, avg duration, most used exercises, PRs per exercise
+- **Authorization**: Users can only view/edit their own workout sessions
+
 ### Validation
 
 Uses `express-validator` with custom validators:
+
+**Routines:**
 - Routine title: 1-100 chars
 - Routine description: 0-500 chars (optional)
 - Exercise name: 1-100 chars
@@ -84,6 +99,18 @@ Uses `express-validator` with custom validators:
 - RoutineExercise weight: 0-1000 kg (optional, accepts decimals)
 - RoutineExercise rest: 0-3600 seconds (optional)
 - RoutineExercise requires valid `exerciseId` from catalog
+
+**Workout Sessions:**
+- Session title: 1-100 chars
+- Session notes: 0-1000 chars (optional)
+- Session duration: 0-86400 seconds (24 hours max, optional)
+- startedAt/completedAt: ISO 8601 date format (optional)
+- SessionExercise sets: 1-50
+- SessionExercise reps: 1-500
+- SessionExercise weight: 0-1000 kg (optional, accepts decimals)
+- SessionExercise rest: 0-3600 seconds (optional)
+- SessionExercise notes: 0-500 chars (optional)
+- SessionExercise requires valid `exerciseId` from catalog
 
 ### Security Features
 
@@ -167,3 +194,45 @@ All endpoints require `Authorization: Bearer <token>` header
 - muscleMass (0-500 kg)
 
 All fields are optional and can be updated independently.
+
+### Progress Tracking (`/api/progress/*`)
+All endpoints require `Authorization: Bearer <token>` header
+
+**Workout Sessions:**
+- `GET /sessions` - Get all workout sessions for authenticated user
+  - Query params: `routineId`, `startDate`, `endDate`, `completed` (true/false), `limit`, `offset`
+- `GET /sessions/:id` - Get specific workout session by ID
+- `POST /sessions` - Create new workout session (with optional exercises array)
+- `PUT /sessions/:id` - Update workout session (only session owner can update)
+- `DELETE /sessions/:id` - Delete workout session (only session owner can delete)
+
+**Statistics & Progress:**
+- `GET /stats` - Get overall workout statistics
+  - Returns: total sessions, completed sessions, in-progress sessions, total duration, avg duration, most used exercises
+  - Query params: `startDate`, `endDate`
+- `GET /exercises/:exerciseId` - Get progress history for specific exercise
+  - Returns: exercise details, historical performance data, stats (max weight, max reps, averages)
+  - Query params: `startDate`, `endDate`, `limit`
+
+**Session Request Body Example:**
+```json
+{
+  "title": "Morning Workout",
+  "routineId": 1,  // optional
+  "notes": "Felt great today!",  // optional
+  "startedAt": "2024-01-15T08:00:00Z",  // optional, defaults to now
+  "completedAt": "2024-01-15T09:30:00Z",  // optional, null = in progress
+  "duration": 5400,  // optional, in seconds
+  "exercises": [  // optional
+    {
+      "exerciseId": 1,
+      "sets": 4,
+      "reps": 10,
+      "weight": 80,  // optional
+      "rest": 90,  // optional
+      "order": 1,  // optional, defaults to array index + 1
+      "notes": "PR!"  // optional
+    }
+  ]
+}
+```
