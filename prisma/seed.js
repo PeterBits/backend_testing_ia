@@ -16,6 +16,18 @@ async function main() {
 
   // Hash password for all users (same password for simplicity in development)
   const hashedPassword = await bcrypt.hash("Password123", 12);
+  const adminPassword = await bcrypt.hash("admin", 12);
+
+  // Create Admin User
+  console.log("👑 Creating admin user...");
+  const admin = await prisma.user.create({
+    data: {
+      email: "admin@admin.com",
+      password: adminPassword,
+      name: "Admin",
+      role: "TRAINER",
+    },
+  });
 
   // Create Trainers
   console.log("👨‍🏫 Creating trainers...");
@@ -538,18 +550,20 @@ async function main() {
 
   console.log("✅ Seed completed successfully!");
   console.log("\n📊 Created:");
+  console.log(`  - 1 Admin`);
   console.log(`  - 2 Trainers`);
   console.log(`  - 4 Athletes`);
   console.log(`  - 5 Trainer-Athlete relationships`);
   console.log(`  - 3 User metrics profiles`);
   console.log(`  - 21 Exercises in catalog`);
   console.log(`  - 6 Routines with assigned exercises`);
-  console.log("\n🔐 Login credentials (all users):");
-  console.log(`  Password: Password123`);
-  console.log("\n👨‍🏫 Trainers:");
+  console.log("\n🔐 Login credentials:");
+  console.log("\n👑 Admin:");
+  console.log(`  - admin@admin.com / admin`);
+  console.log("\n👨‍🏫 Trainers (Password: Password123):");
   console.log(`  - trainer1@gym.com (Carlos Martínez)`);
   console.log(`  - trainer2@gym.com (Ana García)`);
-  console.log("\n🏃 Athletes:");
+  console.log("\n🏃 Athletes (Password: Password123):");
   console.log(`  - athlete1@gym.com (Juan Pérez)`);
   console.log(`  - athlete2@gym.com (María López)`);
   console.log(`  - athlete3@gym.com (Pedro Sánchez)`);
