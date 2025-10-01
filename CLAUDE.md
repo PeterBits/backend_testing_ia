@@ -27,7 +27,30 @@ npx prisma generate                              # Regenerate Prisma Client
 npx prisma studio                                # Open Prisma Studio GUI
 npm run prisma:studio                            # Shortcut for Prisma Studio
 npm run prisma:generate                          # Shortcut for generate
+
+# Code formatting
+npx prettier --write "src/**/*.js" "tests/**/*.js"  # Format all code
 ```
+
+## Code Style & Formatting
+
+This project uses Prettier for code formatting with the following configuration (`.prettierrc`):
+
+- **Quotes**: Double quotes (`"singleQuote": false`)
+- **Indentation**: 2 spaces (`"tabWidth": 2`, `"useTabs": false`)
+- **Semicolons**: Required (`"semi": true`)
+- **Trailing commas**: ES5 style (`"trailingComma": "es5"`)
+- **Line width**: 80 characters (`"printWidth": 80`)
+- **Arrow function parentheses**: Always (`"arrowParens": "always"`)
+- **Line endings**: LF (`"endOfLine": "lf"`)
+
+**IMPORTANT**: When editing code, always maintain:
+- Double quotes for strings
+- 2-space indentation (no tabs)
+- Semicolons at statement ends
+- Consistent formatting as per `.prettierrc`
+
+The project also includes `.editorconfig` for editor consistency.
 
 ## Architecture
 
