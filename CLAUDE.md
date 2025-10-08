@@ -59,6 +59,7 @@ The project also includes `.editorconfig` for editor consistency.
 - **Server**: `src/server.js` - Express app with security middleware (helmet, CORS, rate limiting)
 - **Database**: `src/services/database.js` - Singleton PrismaClient instance
 - **Auth**: `src/utils/auth.js` - JWT and bcrypt utilities
+- **Constants**: `src/utils/constants.js` - Global constants (language IDs: English=2, Spanish=4)
 - **Middleware**: `src/middlewares/auth.js` - Token authentication (`authenticateToken`, `optionalAuth`)
 - **Controllers**: `src/controllers/` - Business logic for auth and routines
 - **Routes**: `src/routes/` - API endpoint definitions
@@ -82,7 +83,7 @@ The database consists of multiple related models organized into functional group
 - **ExerciseEquipmentRelation** - Join table linking exercises to equipment
 - **ExerciseImage** - Images for exercises with license info, style, main flag, and author history (JSON array)
 - **ExerciseVideo** - Videos for exercises with metadata (size, duration, dimensions, codec) and license info
-- **ExerciseTranslation** - Localized names and descriptions for exercises with language ID and license info
+- **ExerciseTranslation** - Localized names and descriptions for exercises with language ID (use LANGUAGES constants) and license info
 - **ExerciseTranslationAlias** - Alternative names for exercises in different languages
 - **ExerciseNote** - Additional notes/comments for exercise translations
 
@@ -94,7 +95,9 @@ The database consists of multiple related models organized into functional group
 
 **Key Features:**
 - All relationships use `onDelete: Cascade` or `SetNull` (for optional routine reference in sessions)
-- Exercise structure supports internationalization with multiple translations
+- Exercise structure supports internationalization with multiple translations per exercise
+- Language IDs are defined in `src/utils/constants.js` (LANGUAGES.ENGLISH = 2, LANGUAGES.SPANISH = 4)
+- Exercise data loaded from `prisma/exercicies_mock.json` during database seeding
 - Images and videos include licensing information and author attribution
 - Author history stored as JSON arrays (serialized strings in database)
 - Database service is a singleton accessible via `databaseService.getClient()`
@@ -144,9 +147,13 @@ Uses `express-validator` with custom validators:
 - translations: Array of translation objects (optional)
   - name: 1-200 chars
   - description: 0-2000 chars
-  - language: Valid integer
-- images: Array of image objects (optional)
-- videos: Array of video objects (optional)
+  - language: Valid integer (use LANGUAGES.ENGLISH or LANGUAGES.SPANISH from constants)
+  - licenseId, licenseTitle, licenseObjectUrl, licenseAuthorUrl, licenseDerivativeSourceUrl
+  - authorHistory: Array of author names
+  - aliases: Array of alternative names (optional)
+  - notes: Array of additional comments (optional)
+- images: Array of image objects with license info, style, isMain flag (optional)
+- videos: Array of video objects with metadata and license info (optional)
 
 **Routines:**
 - Routine title: 1-100 chars
@@ -258,17 +265,30 @@ Each exercise includes:
   "equipment": [1],
   "translations": [
     {
-      "name": "Exercise Name",
-      "description": "Description",
-      "language": 1,
+      "name": "Push Up",
+      "description": "A basic upper body exercise",
+      "language": 2,  // Use LANGUAGES.ENGLISH from constants
       "licenseId": 1,
       "licenseTitle": "CC BY-SA",
       "licenseObjectUrl": "https://...",
       "licenseAuthorUrl": "https://...",
       "licenseDerivativeSourceUrl": "https://...",
       "authorHistory": ["Author 1", "Author 2"],
-      "aliases": ["Alternative Name"],
-      "notes": ["Important note"]
+      "aliases": ["Press Up"],
+      "notes": ["Keep core engaged"]
+    },
+    {
+      "name": "Flexión",
+      "description": "Un ejercicio básico de tren superior",
+      "language": 4,  // Use LANGUAGES.SPANISH from constants
+      "licenseId": 1,
+      "licenseTitle": "CC BY-SA",
+      "licenseObjectUrl": "https://...",
+      "licenseAuthorUrl": "https://...",
+      "licenseDerivativeSourceUrl": "https://...",
+      "authorHistory": ["Autor 1", "Autor 2"],
+      "aliases": ["Lagartija"],
+      "notes": ["Mantener el core contraído"]
     }
   ],
   "images": [...],
