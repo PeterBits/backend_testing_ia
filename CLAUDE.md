@@ -74,18 +74,43 @@ The database consists of multiple related models organized into functional group
 - **UserMetrics** - Optional body metrics (height, weight, age, gender, bodyFat, muscleMass)
 
 **Exercise Catalog (Complex Structure):**
-- **Exercise** - Main exercise entity with uuid, timestamps, and relations to category, license, muscles, equipment, images, videos, and translations
-- **ExerciseCategory** - Categories for exercises (e.g., strength, cardio)
-- **ExerciseMuscle** - Muscle groups with names (localized + English), position (front/back), and image URLs
-- **ExerciseEquipment** - Equipment types (e.g., barbell, dumbbell, bodyweight)
-- **ExerciseLicense** - License information for exercises, images, videos, and translations
-- **ExerciseMuscleRelation** - Join table linking exercises to primary and secondary muscles
-- **ExerciseEquipmentRelation** - Join table linking exercises to equipment
-- **ExerciseImage** - Images for exercises with license info, style, main flag, and author history (JSON array)
-- **ExerciseVideo** - Videos for exercises with metadata (size, duration, dimensions, codec) and license info
-- **ExerciseTranslation** - Localized names and descriptions for exercises with language ID (use LANGUAGES constants) and license info
-- **ExerciseTranslationAlias** - Alternative names for exercises in different languages
-- **ExerciseNote** - Additional notes/comments for exercise translations
+- **Exercise** - Main exercise entity with:
+  - uuid (unique identifier), timestamps (created, lastUpdate, lastUpdateGlobal)
+  - categoryId (FK), licenseId (FK), licenseAuthor (optional)
+  - Relations to category, license, muscles, equipment, images, videos, translations, routineExercises, sessionExercises
+- **ExerciseCategory** - Categories for exercises (e.g., strength, cardio) with id and name
+- **ExerciseMuscle** - Muscle groups with:
+  - Localized name and English name (name, nameEn)
+  - Position indicator (isFront: boolean)
+  - Image URLs (imageUrlMain, imageUrlSecondary)
+- **ExerciseEquipment** - Equipment types (e.g., barbell, dumbbell, bodyweight) with id and name
+- **ExerciseLicense** - License information with fullName, shortName, url
+  - Shared by exercises, images, videos, and translations
+- **ExerciseMuscleRelation** - Join table linking exercises to muscles:
+  - exerciseId (FK), muscleId (FK), isPrimary (boolean)
+  - Unique constraint on [exerciseId, muscleId, isPrimary]
+- **ExerciseEquipmentRelation** - Join table linking exercises to equipment:
+  - exerciseId (FK), equipmentId (FK)
+  - Unique constraint on [exerciseId, equipmentId]
+- **ExerciseImage** - Images for exercises with:
+  - uuid, image (URL), isMain (boolean), style
+  - exerciseId (FK), licenseId (FK)
+  - License details (licenseTitle, licenseObjectUrl, licenseAuthor, licenseAuthorUrl, licenseDerivativeSourceUrl)
+  - authorHistory (JSON array stored as string)
+- **ExerciseVideo** - Videos for exercises with:
+  - uuid, video (URL), isMain (boolean)
+  - Metadata: size, duration, width, height, codec, codecLong
+  - exerciseId (FK), licenseId (FK)
+  - License details and authorHistory (JSON array stored as string)
+- **ExerciseTranslation** - Localized names and descriptions with:
+  - uuid, name, description, language (integer ID - use LANGUAGES constants)
+  - exerciseId (FK), licenseId (FK), created timestamp
+  - License details and authorHistory (JSON array stored as string)
+  - Relations to aliases and notes
+- **ExerciseTranslationAlias** - Alternative names for translations:
+  - uuid, translationId (FK), alias
+- **ExerciseNote** - Additional comments for translations:
+  - uuid, translationId (FK), comment
 
 **Workout Management:**
 - **Routine** - Workout routines with `userId` (owner) and `createdBy` (creator)
@@ -244,15 +269,16 @@ All endpoints require `Authorization: Bearer <token>` header
 
 **Response Structure:**
 Each exercise includes:
-- Basic info: id, uuid, timestamps
-- Category object with id and name
-- License object with full_name, short_name, url
-- Muscles array (primary muscles with position and images)
-- Muscles_secondary array (secondary muscles)
-- Equipment array
-- Images array (with license info, style, main flag, author history)
-- Videos array (with metadata, license info, author history)
-- Translations array (localized names/descriptions with aliases and notes)
+- Basic info: id, uuid, created, last_update, last_update_global
+- Category object: { id, name }
+- License object: { id, full_name, short_name, url }
+- license_author: String (optional)
+- Muscles array (primary muscles): [{ id, name, name_en, is_front, image_url_main, image_url_secondary }]
+- Muscles_secondary array (secondary muscles with same structure)
+- Equipment array: [{ id, name }]
+- Images array: [{ id, uuid, image, is_main, style, license (id), license_title, license_object_url, license_author, license_author_url, license_derivative_source_url, author_history (array) }]
+- Videos array: [{ id, uuid, video, is_main, size, duration, width, height, codec, codec_long, license (id), license_title, license_object_url, license_author, license_author_url, license_derivative_source_url, author_history (array) }]
+- Translations array: [{ id, uuid, name, exercise (id), description, created, language (int), aliases: [{ id, uuid, alias }], notes: [{ id, uuid, translation (id), comment }], license (id), license_title, license_object_url, license_author, license_author_url, license_derivative_source_url, author_history (array) }]
 
 **Create Request Body Example:**
 ```json
