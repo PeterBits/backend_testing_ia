@@ -33,6 +33,21 @@ class ExerciseController {
         };
       }
 
+      // Build translations include clause
+      const translationsInclude = {
+        include: {
+          aliases: true,
+          notes: true,
+        },
+      };
+
+      // If language filter is provided, only include translations in that language
+      if (language) {
+        translationsInclude.where = {
+          language: parseInt(language),
+        };
+      }
+
       const exercises = await prisma.exercise.findMany({
         where: whereClause,
         orderBy: { created: "desc" },
@@ -55,12 +70,7 @@ class ExerciseController {
           videos: {
             orderBy: { isMain: "desc" },
           },
-          translations: {
-            include: {
-              aliases: true,
-              notes: true,
-            },
-          },
+          translations: translationsInclude,
         },
       });
 
