@@ -109,6 +109,9 @@ The database consists of multiple related models organized into functional group
   - Relations to aliases and notes
 - **ExerciseTranslationAlias** - Alternative names for translations:
   - uuid, translationId (FK), alias
+  - Used for regional variations (e.g., "Lagartija" vs "Flexión" vs "Plancha" for push-ups in different Spanish-speaking countries)
+  - Improves search functionality by allowing users to find exercises using any common name
+  - Multiple aliases per translation enable multiregional support
 - **ExerciseNote** - Additional comments for translations:
   - uuid, translationId (FK), comment
 
@@ -282,7 +285,7 @@ Each exercise includes:
 - Equipment array: [{ id, name }]
 - Images array: [{ id, uuid, image, is_main, style, license (id), license_title, license_object_url, license_author, license_author_url, license_derivative_source_url, author_history (array) }]
 - Videos array: [{ id, uuid, video, is_main, size, duration, width, height, codec, codec_long, license (id), license_title, license_object_url, license_author, license_author_url, license_derivative_source_url, author_history (array) }]
-- Translations array: [{ id, uuid, name, exercise (id), description, created, language (int), aliases: [{ id, uuid, alias }], notes: [{ id, uuid, translation (id), comment }], license (id), license_title, license_object_url, license_author, license_author_url, license_derivative_source_url, author_history (array) }]
+- Translations array: [{ id, uuid, name, exercise (id), description, created, language (int), aliases: [{ id, uuid, alias }] (alternative names for regional variations), notes: [{ id, uuid, translation (id), comment }] (additional exercise tips/warnings), license (id), license_title, license_object_url, license_author, license_author_url, license_derivative_source_url, author_history (array) }]
 
 **Create Request Body Example:**
 ```json

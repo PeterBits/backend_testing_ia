@@ -34,6 +34,10 @@ class ExerciseController {
       }
 
       // Build translations include clause
+      // We need to include aliases and notes as they are in separate related tables:
+      // - aliases: Alternative names for regional variations (e.g., "Lagartija" vs "Flexión" vs "Plancha")
+      //            This enables flexible search across different Spanish-speaking countries
+      // - notes: Additional tips, warnings, or instructions for the exercise
       const translationsInclude = {
         include: {
           aliases: true,
@@ -467,6 +471,9 @@ class ExerciseController {
             });
 
             // Create aliases for this translation
+            // Aliases are alternative names for the same exercise in a specific language
+            // Examples: "Lagartija", "Flexión", "Plancha" for push-ups in Spanish
+            // This enables users from different regions to find exercises using local terminology
             if (trans.aliases && trans.aliases.length > 0) {
               await tx.exerciseTranslationAlias.createMany({
                 data: trans.aliases.map((alias) => ({
@@ -477,6 +484,8 @@ class ExerciseController {
             }
 
             // Create notes for this translation
+            // Notes contain additional tips, warnings, or execution instructions
+            // Examples: "Keep core engaged", "Don't arch your back"
             if (trans.notes && trans.notes.length > 0) {
               await tx.exerciseNote.createMany({
                 data: trans.notes.map((note) => ({

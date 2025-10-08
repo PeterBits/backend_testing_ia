@@ -194,7 +194,7 @@ model ExerciseTranslation {
   exerciseId                   Int                          @map("exercise_id")
   description                  String
   created                      DateTime                     @default(now())
-  language                     Int
+  language                     Int // Language ID (2 = English, 4 = Spanish)
   license                      ExerciseLicense              @relation(fields: [licenseId], references: [id], onDelete: Cascade)
   licenseId                    Int                          @map("license_id")
   licenseTitle                 String                       @map("license_title")
@@ -203,8 +203,8 @@ model ExerciseTranslation {
   licenseAuthorUrl             String                       @map("license_author_url")
   licenseDerivativeSourceUrl   String                       @map("license_derivative_source_url")
   authorHistory                String                       @map("author_history") // JSON array stored as string
-  aliases                      ExerciseTranslationAlias[]
-  notes                        ExerciseNote[]
+  aliases                      ExerciseTranslationAlias[] // Alternative names for regional variations
+  notes                        ExerciseNote[] // Additional tips and instructions
 
   @@map("exercise_translations")
 }
@@ -214,7 +214,7 @@ model ExerciseTranslationAlias {
   uuid        String               @unique @default(uuid())
   translation ExerciseTranslation  @relation(fields: [translationId], references: [id], onDelete: Cascade)
   translationId Int                @map("translation_id")
-  alias       String
+  alias       String // Alternative name (e.g., "Lagartija", "Flexión", "Plancha" for push-ups in Spanish)
 
   @@map("exercise_translation_aliases")
 }
@@ -224,7 +224,7 @@ model ExerciseNote {
   uuid        String               @unique @default(uuid())
   translation ExerciseTranslation  @relation(fields: [translationId], references: [id], onDelete: Cascade)
   translationId Int                @map("translation_id")
-  comment     String
+  comment     String // Additional tips, warnings, or execution instructions
 
   @@map("exercise_notes")
 }
