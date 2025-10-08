@@ -152,7 +152,28 @@ async function main() {
   // Load exercises from JSON file
   console.log("📚 Loading exercise catalog from JSON...");
   const exercisesJsonPath = path.join(__dirname, "exercicies_mock.json");
-  const exercisesData = JSON.parse(fs.readFileSync(exercisesJsonPath, "utf8"));
+  const allExercisesData = JSON.parse(
+    fs.readFileSync(exercisesJsonPath, "utf8")
+  );
+
+  // Language constants (English = 2, Spanish = 4)
+  const ENGLISH = 2;
+  const SPANISH = 4;
+
+  // Filter exercises: only keep those with English OR Spanish translations
+  const exercisesData = allExercisesData.filter((ex) => {
+    return (
+      ex.translations &&
+      ex.translations.length > 0 &&
+      ex.translations.some(
+        (trans) => trans.language === ENGLISH || trans.language === SPANISH
+      )
+    );
+  });
+
+  console.log(
+    `📊 Filtered ${allExercisesData.length} exercises down to ${exercisesData.length} with English or Spanish translations`
+  );
 
   // Create maps to track created entities by their original IDs
   const categoryMap = new Map();
