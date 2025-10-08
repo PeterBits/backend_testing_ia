@@ -264,6 +264,9 @@ All endpoints require `Authorization: Bearer <token>` header
 All endpoints require `Authorization: Bearer <token>` header
 
 - `GET /` - Get all exercises from catalog (returns complete structure with all relations)
+  - Query params:
+    - `language` (optional): Filter exercises by language ID (e.g., `?language=2` for English, `?language=4` for Spanish)
+    - Only returns exercises that have at least one translation in the specified language
 - `GET /:id` - Get specific exercise by ID (returns complete structure with all relations)
 - `POST /` - Create new exercise (admin use - complex structure with all relations)
 

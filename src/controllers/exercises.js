@@ -1,15 +1,40 @@
 const { body, validationResult } = require("express-validator");
 const databaseService = require("../services/database");
+const { LANGUAGES } = require("../utils/constants");
 
 class ExerciseController {
   /**
    * Get all exercises from the catalog
+   * Query params:
+   *   - language: Filter exercises by language ID (e.g., 2 for English, 4 for Spanish)
    */
   static async getAllExercises(req, res) {
     try {
       const prisma = databaseService.getClient();
+      const { language } = req.query;
+
+      // Build the where clause for filtering
+      const whereClause = {};
+
+      // If language filter is provided, only return exercises with that language
+      if (language) {
+        const languageId = parseInt(language);
+        if (isNaN(languageId)) {
+          return res.status(400).json({
+            error: "Invalid language parameter",
+            message: "Language must be a valid integer ID.",
+          });
+        }
+
+        whereClause.translations = {
+          some: {
+            language: languageId,
+          },
+        };
+      }
 
       const exercises = await prisma.exercise.findMany({
+        where: whereClause,
         orderBy: { created: "desc" },
         include: {
           category: true,
