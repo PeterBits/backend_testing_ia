@@ -55,16 +55,178 @@ model Routine {
   @@map("routines")
 }
 
+model ExerciseCategory {
+  id        Int        @id @default(autoincrement())
+  name      String
+  exercises Exercise[]
+
+  @@map("exercise_categories")
+}
+
+model ExerciseMuscle {
+  id                 Int                         @id @default(autoincrement())
+  name               String
+  nameEn             String                      @map("name_en")
+  isFront            Boolean                     @map("is_front")
+  imageUrlMain       String                      @map("image_url_main")
+  imageUrlSecondary  String                      @map("image_url_secondary")
+  exercises          ExerciseMuscleRelation[]
+
+  @@map("exercise_muscles")
+}
+
+model ExerciseEquipment {
+  id        Int                        @id @default(autoincrement())
+  name      String
+  exercises ExerciseEquipmentRelation[]
+
+  @@map("exercise_equipment")
+}
+
+model ExerciseLicense {
+  id                 Int                   @id @default(autoincrement())
+  fullName           String                @map("full_name")
+  shortName          String                @map("short_name")
+  url                String
+  exercises          Exercise[]
+  images             ExerciseImage[]
+  videos             ExerciseVideo[]
+  translations       ExerciseTranslation[]
+
+  @@map("exercise_licenses")
+}
+
 model Exercise {
-  id               Int               @id @default(autoincrement())
-  name             String
-  description      String?
-  routineExercises RoutineExercise[]
-  sessionExercises SessionExercise[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                     Int                          @id @default(autoincrement())
+  uuid                   String                       @unique @default(uuid())
+  created                DateTime                     @default(now())
+  lastUpdate             DateTime                     @updatedAt @map("last_update")
+  lastUpdateGlobal       DateTime                     @updatedAt @map("last_update_global")
+  category               ExerciseCategory             @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId             Int                          @map("category_id")
+  license                ExerciseLicense              @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  licenseId              Int                          @map("license_id")
+  licenseAuthor          String?                      @map("license_author")
+  muscles                ExerciseMuscleRelation[]
+  equipment              ExerciseEquipmentRelation[]
+  images                 ExerciseImage[]
+  videos                 ExerciseVideo[]
+  translations           ExerciseTranslation[]
+  routineExercises       RoutineExercise[]
+  sessionExercises       SessionExercise[]
 
   @@map("exercises")
+}
+
+model ExerciseMuscleRelation {
+  id          Int            @id @default(autoincrement())
+  exercise    Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  exerciseId  Int            @map("exercise_id")
+  muscle      ExerciseMuscle @relation(fields: [muscleId], references: [id], onDelete: Cascade)
+  muscleId    Int            @map("muscle_id")
+  isPrimary   Boolean        @default(true) @map("is_primary")
+
+  @@unique([exerciseId, muscleId, isPrimary])
+  @@map("exercise_muscle_relations")
+}
+
+model ExerciseEquipmentRelation {
+  id          Int               @id @default(autoincrement())
+  exercise    Exercise          @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  exerciseId  Int               @map("exercise_id")
+  equipment   ExerciseEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  equipmentId Int               @map("equipment_id")
+
+  @@unique([exerciseId, equipmentId])
+  @@map("exercise_equipment_relations")
+}
+
+model ExerciseImage {
+  id                           Int             @id @default(autoincrement())
+  uuid                         String          @unique @default(uuid())
+  exercise                     Exercise        @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  exerciseId                   Int             @map("exercise_id")
+  image                        String
+  isMain                       Boolean         @default(false) @map("is_main")
+  style                        String
+  license                      ExerciseLicense @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  licenseId                    Int             @map("license_id")
+  licenseTitle                 String          @map("license_title")
+  licenseObjectUrl             String          @map("license_object_url")
+  licenseAuthor                String?         @map("license_author")
+  licenseAuthorUrl             String          @map("license_author_url")
+  licenseDerivativeSourceUrl   String          @map("license_derivative_source_url")
+  authorHistory                String          @map("author_history") // JSON array stored as string
+
+  @@map("exercise_images")
+}
+
+model ExerciseVideo {
+  id                           Int             @id @default(autoincrement())
+  uuid                         String          @unique @default(uuid())
+  exercise                     Exercise        @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  exerciseId                   Int             @map("exercise_id")
+  video                        String
+  isMain                       Boolean         @default(false) @map("is_main")
+  size                         Int
+  duration                     String
+  width                        Int
+  height                       Int
+  codec                        String
+  codecLong                    String          @map("codec_long")
+  license                      ExerciseLicense @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  licenseId                    Int             @map("license_id")
+  licenseTitle                 String          @map("license_title")
+  licenseObjectUrl             String          @map("license_object_url")
+  licenseAuthor                String?         @map("license_author")
+  licenseAuthorUrl             String          @map("license_author_url")
+  licenseDerivativeSourceUrl   String          @map("license_derivative_source_url")
+  authorHistory                String          @map("author_history") // JSON array stored as string
+
+  @@map("exercise_videos")
+}
+
+model ExerciseTranslation {
+  id                           Int                          @id @default(autoincrement())
+  uuid                         String                       @unique @default(uuid())
+  name                         String
+  exercise                     Exercise                     @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  exerciseId                   Int                          @map("exercise_id")
+  description                  String
+  created                      DateTime                     @default(now())
+  language                     Int
+  license                      ExerciseLicense              @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  licenseId                    Int                          @map("license_id")
+  licenseTitle                 String                       @map("license_title")
+  licenseObjectUrl             String                       @map("license_object_url")
+  licenseAuthor                String?                      @map("license_author")
+  licenseAuthorUrl             String                       @map("license_author_url")
+  licenseDerivativeSourceUrl   String                       @map("license_derivative_source_url")
+  authorHistory                String                       @map("author_history") // JSON array stored as string
+  aliases                      ExerciseTranslationAlias[]
+  notes                        ExerciseNote[]
+
+  @@map("exercise_translations")
+}
+
+model ExerciseTranslationAlias {
+  id          Int                  @id @default(autoincrement())
+  uuid        String               @unique @default(uuid())
+  translation ExerciseTranslation  @relation(fields: [translationId], references: [id], onDelete: Cascade)
+  translationId Int                @map("translation_id")
+  alias       String
+
+  @@map("exercise_translation_aliases")
+}
+
+model ExerciseNote {
+  id          Int                  @id @default(autoincrement())
+  uuid        String               @unique @default(uuid())
+  translation ExerciseTranslation  @relation(fields: [translationId], references: [id], onDelete: Cascade)
+  translationId Int                @map("translation_id")
+  comment     String
+
+  @@map("exercise_notes")
 }
 
 model RoutineExercise {

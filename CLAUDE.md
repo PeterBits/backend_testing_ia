@@ -65,16 +65,38 @@ The project also includes `.editorconfig` for editor consistency.
 
 ### Database Schema (Prisma)
 
-Eight main models with cascading deletes:
+The database consists of multiple related models organized into functional groups:
+
+**User Management:**
 - **User** (with Role: ATHLETE or TRAINER) → has many **Routine**, **WorkoutSession** → has one **UserMetrics**
-- **Exercise** - Catalog of exercises (id, name, description)
-- **Routine** - Workout routines with `userId` (owner) and `createdBy` (creator)
-- **RoutineExercise** - Join table linking routines to exercises with sets, reps, weight, rest, order
 - **TrainerAthlete** - Join table for N:N relationship between trainers and athletes
 - **UserMetrics** - Optional body metrics (height, weight, age, gender, bodyFat, muscleMass)
+
+**Exercise Catalog (Complex Structure):**
+- **Exercise** - Main exercise entity with uuid, timestamps, and relations to category, license, muscles, equipment, images, videos, and translations
+- **ExerciseCategory** - Categories for exercises (e.g., strength, cardio)
+- **ExerciseMuscle** - Muscle groups with names (localized + English), position (front/back), and image URLs
+- **ExerciseEquipment** - Equipment types (e.g., barbell, dumbbell, bodyweight)
+- **ExerciseLicense** - License information for exercises, images, videos, and translations
+- **ExerciseMuscleRelation** - Join table linking exercises to primary and secondary muscles
+- **ExerciseEquipmentRelation** - Join table linking exercises to equipment
+- **ExerciseImage** - Images for exercises with license info, style, main flag, and author history (JSON array)
+- **ExerciseVideo** - Videos for exercises with metadata (size, duration, dimensions, codec) and license info
+- **ExerciseTranslation** - Localized names and descriptions for exercises with language ID and license info
+- **ExerciseTranslationAlias** - Alternative names for exercises in different languages
+- **ExerciseNote** - Additional notes/comments for exercise translations
+
+**Workout Management:**
+- **Routine** - Workout routines with `userId` (owner) and `createdBy` (creator)
+- **RoutineExercise** - Join table linking routines to exercises with sets, reps, weight, rest, order
 - **WorkoutSession** - Logged workout sessions with startedAt, completedAt, duration, notes, optional routineId
 - **SessionExercise** - Join table linking sessions to exercises with actual performed sets, reps, weight, rest, order, notes
+
+**Key Features:**
 - All relationships use `onDelete: Cascade` or `SetNull` (for optional routine reference in sessions)
+- Exercise structure supports internationalization with multiple translations
+- Images and videos include licensing information and author attribution
+- Author history stored as JSON arrays (serialized strings in database)
 - Database service is a singleton accessible via `databaseService.getClient()`
 
 ### Authentication Flow
@@ -112,11 +134,23 @@ Eight main models with cascading deletes:
 
 Uses `express-validator` with custom validators:
 
+**Exercises (Create):**
+- categoryId: Valid integer (required)
+- licenseId: Valid integer (required)
+- licenseAuthor: 0-200 chars (optional)
+- muscles: Array of muscle IDs (optional)
+- musclesSecondary: Array of muscle IDs (optional)
+- equipment: Array of equipment IDs (optional)
+- translations: Array of translation objects (optional)
+  - name: 1-200 chars
+  - description: 0-2000 chars
+  - language: Valid integer
+- images: Array of image objects (optional)
+- videos: Array of video objects (optional)
+
 **Routines:**
 - Routine title: 1-100 chars
 - Routine description: 0-500 chars (optional)
-- Exercise name: 1-100 chars
-- Exercise description: 0-500 chars (optional)
 - RoutineExercise sets: 1-50
 - RoutineExercise reps: 1-500
 - RoutineExercise weight: 0-1000 kg (optional, accepts decimals)
@@ -197,9 +231,50 @@ All endpoints require `Authorization: Bearer <token>` header
 ### Exercises (`/api/exercises/*`)
 All endpoints require `Authorization: Bearer <token>` header
 
-- `GET /` - Get all exercises from catalog
-- `GET /:id` - Get specific exercise by ID
-- `POST /` - Create new exercise (for admin/future use)
+- `GET /` - Get all exercises from catalog (returns complete structure with all relations)
+- `GET /:id` - Get specific exercise by ID (returns complete structure with all relations)
+- `POST /` - Create new exercise (admin use - complex structure with all relations)
+
+**Response Structure:**
+Each exercise includes:
+- Basic info: id, uuid, timestamps
+- Category object with id and name
+- License object with full_name, short_name, url
+- Muscles array (primary muscles with position and images)
+- Muscles_secondary array (secondary muscles)
+- Equipment array
+- Images array (with license info, style, main flag, author history)
+- Videos array (with metadata, license info, author history)
+- Translations array (localized names/descriptions with aliases and notes)
+
+**Create Request Body Example:**
+```json
+{
+  "categoryId": 1,
+  "licenseId": 1,
+  "licenseAuthor": "Author Name",
+  "muscles": [1, 2],
+  "musclesSecondary": [3],
+  "equipment": [1],
+  "translations": [
+    {
+      "name": "Exercise Name",
+      "description": "Description",
+      "language": 1,
+      "licenseId": 1,
+      "licenseTitle": "CC BY-SA",
+      "licenseObjectUrl": "https://...",
+      "licenseAuthorUrl": "https://...",
+      "licenseDerivativeSourceUrl": "https://...",
+      "authorHistory": ["Author 1", "Author 2"],
+      "aliases": ["Alternative Name"],
+      "notes": ["Important note"]
+    }
+  ],
+  "images": [...],
+  "videos": [...]
+}
+```
 
 ### User Metrics (`/api/metrics`)
 All endpoints require `Authorization: Bearer <token>` header

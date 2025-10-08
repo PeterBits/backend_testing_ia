@@ -10,19 +10,143 @@ class ExerciseController {
       const prisma = databaseService.getClient();
 
       const exercises = await prisma.exercise.findMany({
-        orderBy: { name: "asc" },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          createdAt: true,
+        orderBy: { created: "desc" },
+        include: {
+          category: true,
+          license: true,
+          muscles: {
+            include: {
+              muscle: true,
+            },
+          },
+          equipment: {
+            include: {
+              equipment: true,
+            },
+          },
+          images: {
+            orderBy: { isMain: "desc" },
+          },
+          videos: {
+            orderBy: { isMain: "desc" },
+          },
+          translations: {
+            include: {
+              aliases: true,
+              notes: true,
+            },
+          },
         },
       });
 
+      // Transform data to match frontend API structure
+      const transformedExercises = exercises.map((exercise) => ({
+        id: exercise.id,
+        uuid: exercise.uuid,
+        created: exercise.created.toISOString(),
+        last_update: exercise.lastUpdate.toISOString(),
+        last_update_global: exercise.lastUpdateGlobal.toISOString(),
+        category: {
+          id: exercise.category.id,
+          name: exercise.category.name,
+        },
+        muscles: exercise.muscles
+          .filter((m) => m.isPrimary)
+          .map((m) => ({
+            id: m.muscle.id,
+            name: m.muscle.name,
+            name_en: m.muscle.nameEn,
+            is_front: m.muscle.isFront,
+            image_url_main: m.muscle.imageUrlMain,
+            image_url_secondary: m.muscle.imageUrlSecondary,
+          })),
+        muscles_secondary: exercise.muscles
+          .filter((m) => !m.isPrimary)
+          .map((m) => ({
+            id: m.muscle.id,
+            name: m.muscle.name,
+            name_en: m.muscle.nameEn,
+            is_front: m.muscle.isFront,
+            image_url_main: m.muscle.imageUrlMain,
+            image_url_secondary: m.muscle.imageUrlSecondary,
+          })),
+        equipment: exercise.equipment.map((e) => ({
+          id: e.equipment.id,
+          name: e.equipment.name,
+        })),
+        license: {
+          id: exercise.license.id,
+          full_name: exercise.license.fullName,
+          short_name: exercise.license.shortName,
+          url: exercise.license.url,
+        },
+        license_author: exercise.licenseAuthor,
+        images: exercise.images.map((img) => ({
+          id: img.id,
+          uuid: img.uuid,
+          image: img.image,
+          is_main: img.isMain,
+          style: img.style,
+          license: img.licenseId,
+          license_title: img.licenseTitle,
+          license_object_url: img.licenseObjectUrl,
+          license_author: img.licenseAuthor,
+          license_author_url: img.licenseAuthorUrl,
+          license_derivative_source_url: img.licenseDerivativeSourceUrl,
+          author_history: JSON.parse(img.authorHistory || "[]"),
+        })),
+        videos: exercise.videos.map((vid) => ({
+          id: vid.id,
+          uuid: vid.uuid,
+          video: vid.video,
+          is_main: vid.isMain,
+          size: vid.size,
+          duration: vid.duration,
+          width: vid.width,
+          height: vid.height,
+          codec: vid.codec,
+          codec_long: vid.codecLong,
+          license: vid.licenseId,
+          license_title: vid.licenseTitle,
+          license_object_url: vid.licenseObjectUrl,
+          license_author: vid.licenseAuthor,
+          license_author_url: vid.licenseAuthorUrl,
+          license_derivative_source_url: vid.licenseDerivativeSourceUrl,
+          author_history: JSON.parse(vid.authorHistory || "[]"),
+        })),
+        translations: exercise.translations.map((trans) => ({
+          id: trans.id,
+          uuid: trans.uuid,
+          name: trans.name,
+          exercise: trans.exerciseId,
+          description: trans.description,
+          created: trans.created.toISOString(),
+          language: trans.language,
+          aliases: trans.aliases.map((alias) => ({
+            id: alias.id,
+            uuid: alias.uuid,
+            alias: alias.alias,
+          })),
+          notes: trans.notes.map((note) => ({
+            id: note.id,
+            uuid: note.uuid,
+            translation: note.translationId,
+            comment: note.comment,
+          })),
+          license: trans.licenseId,
+          license_title: trans.licenseTitle,
+          license_object_url: trans.licenseObjectUrl,
+          license_author: trans.licenseAuthor,
+          license_author_url: trans.licenseAuthorUrl,
+          license_derivative_source_url: trans.licenseDerivativeSourceUrl,
+          author_history: JSON.parse(trans.authorHistory || "[]"),
+        })),
+      }));
+
       res.json({
         success: true,
-        data: exercises,
-        count: exercises.length,
+        data: transformedExercises,
+        count: transformedExercises.length,
       });
     } catch (error) {
       console.error("Get exercises error:", error);
@@ -43,12 +167,31 @@ class ExerciseController {
 
       const exercise = await prisma.exercise.findUnique({
         where: { id: parseInt(id) },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          createdAt: true,
-          updatedAt: true,
+        include: {
+          category: true,
+          license: true,
+          muscles: {
+            include: {
+              muscle: true,
+            },
+          },
+          equipment: {
+            include: {
+              equipment: true,
+            },
+          },
+          images: {
+            orderBy: { isMain: "desc" },
+          },
+          videos: {
+            orderBy: { isMain: "desc" },
+          },
+          translations: {
+            include: {
+              aliases: true,
+              notes: true,
+            },
+          },
         },
       });
 
@@ -59,9 +202,113 @@ class ExerciseController {
         });
       }
 
+      // Transform data to match frontend API structure
+      const transformedExercise = {
+        id: exercise.id,
+        uuid: exercise.uuid,
+        created: exercise.created.toISOString(),
+        last_update: exercise.lastUpdate.toISOString(),
+        last_update_global: exercise.lastUpdateGlobal.toISOString(),
+        category: {
+          id: exercise.category.id,
+          name: exercise.category.name,
+        },
+        muscles: exercise.muscles
+          .filter((m) => m.isPrimary)
+          .map((m) => ({
+            id: m.muscle.id,
+            name: m.muscle.name,
+            name_en: m.muscle.nameEn,
+            is_front: m.muscle.isFront,
+            image_url_main: m.muscle.imageUrlMain,
+            image_url_secondary: m.muscle.imageUrlSecondary,
+          })),
+        muscles_secondary: exercise.muscles
+          .filter((m) => !m.isPrimary)
+          .map((m) => ({
+            id: m.muscle.id,
+            name: m.muscle.name,
+            name_en: m.muscle.nameEn,
+            is_front: m.muscle.isFront,
+            image_url_main: m.muscle.imageUrlMain,
+            image_url_secondary: m.muscle.imageUrlSecondary,
+          })),
+        equipment: exercise.equipment.map((e) => ({
+          id: e.equipment.id,
+          name: e.equipment.name,
+        })),
+        license: {
+          id: exercise.license.id,
+          full_name: exercise.license.fullName,
+          short_name: exercise.license.shortName,
+          url: exercise.license.url,
+        },
+        license_author: exercise.licenseAuthor,
+        images: exercise.images.map((img) => ({
+          id: img.id,
+          uuid: img.uuid,
+          image: img.image,
+          is_main: img.isMain,
+          style: img.style,
+          license: img.licenseId,
+          license_title: img.licenseTitle,
+          license_object_url: img.licenseObjectUrl,
+          license_author: img.licenseAuthor,
+          license_author_url: img.licenseAuthorUrl,
+          license_derivative_source_url: img.licenseDerivativeSourceUrl,
+          author_history: JSON.parse(img.authorHistory || "[]"),
+        })),
+        videos: exercise.videos.map((vid) => ({
+          id: vid.id,
+          uuid: vid.uuid,
+          video: vid.video,
+          is_main: vid.isMain,
+          size: vid.size,
+          duration: vid.duration,
+          width: vid.width,
+          height: vid.height,
+          codec: vid.codec,
+          codec_long: vid.codecLong,
+          license: vid.licenseId,
+          license_title: vid.licenseTitle,
+          license_object_url: vid.licenseObjectUrl,
+          license_author: vid.licenseAuthor,
+          license_author_url: vid.licenseAuthorUrl,
+          license_derivative_source_url: vid.licenseDerivativeSourceUrl,
+          author_history: JSON.parse(vid.authorHistory || "[]"),
+        })),
+        translations: exercise.translations.map((trans) => ({
+          id: trans.id,
+          uuid: trans.uuid,
+          name: trans.name,
+          exercise: trans.exerciseId,
+          description: trans.description,
+          created: trans.created.toISOString(),
+          language: trans.language,
+          aliases: trans.aliases.map((alias) => ({
+            id: alias.id,
+            uuid: alias.uuid,
+            alias: alias.alias,
+          })),
+          notes: trans.notes.map((note) => ({
+            id: note.id,
+            uuid: note.uuid,
+            translation: note.translationId,
+            comment: note.comment,
+          })),
+          license: trans.licenseId,
+          license_title: trans.licenseTitle,
+          license_object_url: trans.licenseObjectUrl,
+          license_author: trans.licenseAuthor,
+          license_author_url: trans.licenseAuthorUrl,
+          license_derivative_source_url: trans.licenseDerivativeSourceUrl,
+          author_history: JSON.parse(trans.authorHistory || "[]"),
+        })),
+      };
+
       res.json({
         success: true,
-        data: exercise,
+        data: transformedExercise,
       });
     } catch (error) {
       console.error("Get exercise error:", error);
@@ -73,7 +320,8 @@ class ExerciseController {
   }
 
   /**
-   * Create a new exercise (for future admin features)
+   * Create a new exercise (for admin features)
+   * Note: This is a complex operation that requires category, license, and translation data
    */
   static async createExercise(req, res) {
     try {
@@ -86,38 +334,202 @@ class ExerciseController {
         });
       }
 
-      const { name, description } = req.body;
+      const {
+        categoryId,
+        licenseId,
+        licenseAuthor,
+        translations,
+        muscles,
+        musclesSecondary,
+        equipment,
+        images,
+        videos,
+      } = req.body;
+
       const prisma = databaseService.getClient();
 
-      // Check if exercise with same name exists
-      const existingExercise = await prisma.exercise.findFirst({
-        where: { name: { equals: name, mode: "insensitive" } },
+      // Validate required relations exist
+      const category = await prisma.exerciseCategory.findUnique({
+        where: { id: categoryId },
       });
-
-      if (existingExercise) {
-        return res.status(409).json({
-          error: "Exercise already exists",
-          message: "An exercise with this name already exists.",
+      if (!category) {
+        return res.status(400).json({
+          error: "Invalid category",
+          message: "The specified category does not exist.",
         });
       }
 
-      const exercise = await prisma.exercise.create({
-        data: {
-          name,
-          description: description || null,
-        },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          createdAt: true,
+      const license = await prisma.exerciseLicense.findUnique({
+        where: { id: licenseId },
+      });
+      if (!license) {
+        return res.status(400).json({
+          error: "Invalid license",
+          message: "The specified license does not exist.",
+        });
+      }
+
+      // Create exercise with all relations in a transaction
+      const exercise = await prisma.$transaction(async (tx) => {
+        // Create the base exercise
+        const newExercise = await tx.exercise.create({
+          data: {
+            categoryId,
+            licenseId,
+            licenseAuthor: licenseAuthor || null,
+          },
+        });
+
+        // Create muscle relations (primary)
+        if (muscles && muscles.length > 0) {
+          await tx.exerciseMuscleRelation.createMany({
+            data: muscles.map((muscleId) => ({
+              exerciseId: newExercise.id,
+              muscleId,
+              isPrimary: true,
+            })),
+          });
+        }
+
+        // Create muscle relations (secondary)
+        if (musclesSecondary && musclesSecondary.length > 0) {
+          await tx.exerciseMuscleRelation.createMany({
+            data: musclesSecondary.map((muscleId) => ({
+              exerciseId: newExercise.id,
+              muscleId: muscleId,
+              isPrimary: false,
+            })),
+          });
+        }
+
+        // Create equipment relations
+        if (equipment && equipment.length > 0) {
+          await tx.exerciseEquipmentRelation.createMany({
+            data: equipment.map((equipmentId) => ({
+              exerciseId: newExercise.id,
+              equipmentId,
+            })),
+          });
+        }
+
+        // Create translations
+        if (translations && translations.length > 0) {
+          for (const trans of translations) {
+            const translation = await tx.exerciseTranslation.create({
+              data: {
+                exerciseId: newExercise.id,
+                name: trans.name,
+                description: trans.description,
+                language: trans.language,
+                licenseId: trans.licenseId,
+                licenseTitle: trans.licenseTitle,
+                licenseObjectUrl: trans.licenseObjectUrl,
+                licenseAuthor: trans.licenseAuthor || null,
+                licenseAuthorUrl: trans.licenseAuthorUrl,
+                licenseDerivativeSourceUrl: trans.licenseDerivativeSourceUrl,
+                authorHistory: JSON.stringify(trans.authorHistory || []),
+              },
+            });
+
+            // Create aliases for this translation
+            if (trans.aliases && trans.aliases.length > 0) {
+              await tx.exerciseTranslationAlias.createMany({
+                data: trans.aliases.map((alias) => ({
+                  translationId: translation.id,
+                  alias,
+                })),
+              });
+            }
+
+            // Create notes for this translation
+            if (trans.notes && trans.notes.length > 0) {
+              await tx.exerciseNote.createMany({
+                data: trans.notes.map((note) => ({
+                  translationId: translation.id,
+                  comment: note,
+                })),
+              });
+            }
+          }
+        }
+
+        // Create images
+        if (images && images.length > 0) {
+          await tx.exerciseImage.createMany({
+            data: images.map((img) => ({
+              exerciseId: newExercise.id,
+              image: img.image,
+              isMain: img.isMain || false,
+              style: img.style,
+              licenseId: img.licenseId,
+              licenseTitle: img.licenseTitle,
+              licenseObjectUrl: img.licenseObjectUrl,
+              licenseAuthor: img.licenseAuthor || null,
+              licenseAuthorUrl: img.licenseAuthorUrl,
+              licenseDerivativeSourceUrl: img.licenseDerivativeSourceUrl,
+              authorHistory: JSON.stringify(img.authorHistory || []),
+            })),
+          });
+        }
+
+        // Create videos
+        if (videos && videos.length > 0) {
+          await tx.exerciseVideo.createMany({
+            data: videos.map((vid) => ({
+              exerciseId: newExercise.id,
+              video: vid.video,
+              isMain: vid.isMain || false,
+              size: vid.size,
+              duration: vid.duration,
+              width: vid.width,
+              height: vid.height,
+              codec: vid.codec,
+              codecLong: vid.codecLong,
+              licenseId: vid.licenseId,
+              licenseTitle: vid.licenseTitle,
+              licenseObjectUrl: vid.licenseObjectUrl,
+              licenseAuthor: vid.licenseAuthor || null,
+              licenseAuthorUrl: vid.licenseAuthorUrl,
+              licenseDerivativeSourceUrl: vid.licenseDerivativeSourceUrl,
+              authorHistory: JSON.stringify(vid.authorHistory || []),
+            })),
+          });
+        }
+
+        return newExercise;
+      });
+
+      // Fetch the complete exercise with all relations
+      const completeExercise = await prisma.exercise.findUnique({
+        where: { id: exercise.id },
+        include: {
+          category: true,
+          license: true,
+          muscles: {
+            include: { muscle: true },
+          },
+          equipment: {
+            include: { equipment: true },
+          },
+          images: {
+            orderBy: { isMain: "desc" },
+          },
+          videos: {
+            orderBy: { isMain: "desc" },
+          },
+          translations: {
+            include: {
+              aliases: true,
+              notes: true,
+            },
+          },
         },
       });
 
       res.status(201).json({
         success: true,
         message: "Exercise created successfully",
-        data: exercise,
+        data: completeExercise,
       });
     } catch (error) {
       console.error("Create exercise error:", error);
@@ -129,17 +541,69 @@ class ExerciseController {
   }
 }
 
-// Validation middleware
+// Validation middleware for creating exercises
 const exerciseValidation = [
-  body("name")
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Exercise name must be between 1 and 100 characters"),
-  body("description")
+  body("categoryId")
+    .isInt({ min: 1 })
+    .withMessage("Valid category ID is required"),
+  body("licenseId")
+    .isInt({ min: 1 })
+    .withMessage("Valid license ID is required"),
+  body("licenseAuthor")
     .optional()
     .trim()
-    .isLength({ max: 500 })
-    .withMessage("Description must not exceed 500 characters"),
+    .isLength({ max: 200 })
+    .withMessage("License author must not exceed 200 characters"),
+  body("muscles")
+    .optional()
+    .isArray()
+    .withMessage("Muscles must be an array"),
+  body("muscles.*")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Each muscle ID must be a valid integer"),
+  body("musclesSecondary")
+    .optional()
+    .isArray()
+    .withMessage("Secondary muscles must be an array"),
+  body("musclesSecondary.*")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Each secondary muscle ID must be a valid integer"),
+  body("equipment")
+    .optional()
+    .isArray()
+    .withMessage("Equipment must be an array"),
+  body("equipment.*")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Each equipment ID must be a valid integer"),
+  body("translations")
+    .optional()
+    .isArray()
+    .withMessage("Translations must be an array"),
+  body("translations.*.name")
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage("Translation name must be between 1 and 200 characters"),
+  body("translations.*.description")
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage("Translation description must not exceed 2000 characters"),
+  body("translations.*.language")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Language ID must be a valid integer"),
+  body("images")
+    .optional()
+    .isArray()
+    .withMessage("Images must be an array"),
+  body("videos")
+    .optional()
+    .isArray()
+    .withMessage("Videos must be an array"),
 ];
 
 module.exports = {

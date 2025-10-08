@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
+const fs = require("fs");
+const path = require("path");
 
 const prisma = new PrismaClient();
 
@@ -8,10 +10,24 @@ async function main() {
 
   // Clear existing data
   console.log("🧹 Cleaning existing data...");
+  await prisma.sessionExercise.deleteMany();
+  await prisma.workoutSession.deleteMany();
   await prisma.routineExercise.deleteMany();
-  await prisma.exercise.deleteMany();
   await prisma.routine.deleteMany();
+  await prisma.exerciseNote.deleteMany();
+  await prisma.exerciseTranslationAlias.deleteMany();
+  await prisma.exerciseTranslation.deleteMany();
+  await prisma.exerciseImage.deleteMany();
+  await prisma.exerciseVideo.deleteMany();
+  await prisma.exerciseMuscleRelation.deleteMany();
+  await prisma.exerciseEquipmentRelation.deleteMany();
+  await prisma.exercise.deleteMany();
+  await prisma.exerciseCategory.deleteMany();
+  await prisma.exerciseMuscle.deleteMany();
+  await prisma.exerciseEquipment.deleteMany();
+  await prisma.exerciseLicense.deleteMany();
   await prisma.trainerAthlete.deleteMany();
+  await prisma.userMetrics.deleteMany();
   await prisma.user.deleteMany();
 
   // Hash password for all users (same password for simplicity in development)
@@ -133,156 +149,231 @@ async function main() {
     ],
   });
 
-  // Create Exercise Catalog
-  console.log("📚 Creating exercise catalog...");
-  const sentadillas = await prisma.exercise.create({
-    data: {
-      name: "Sentadillas",
-      description:
-        "Ejercicio compuesto para tren inferior que trabaja cuádriceps, glúteos e isquiotibiales",
-    },
-  });
+  // Load exercises from JSON file
+  console.log("📚 Loading exercise catalog from JSON...");
+  const exercisesJsonPath = path.join(__dirname, "exercicies_mock.json");
+  const exercisesData = JSON.parse(fs.readFileSync(exercisesJsonPath, "utf8"));
 
-  const pressBanca = await prisma.exercise.create({
-    data: {
-      name: "Press de Banca",
-      description: "Ejercicio fundamental para pecho, hombros y tríceps",
-    },
-  });
+  // Create maps to track created entities by their original IDs
+  const categoryMap = new Map();
+  const licenseMap = new Map();
+  const muscleMap = new Map();
+  const equipmentMap = new Map();
+  const exerciseMap = new Map();
 
-  const pesoMuerto = await prisma.exercise.create({
-    data: {
-      name: "Peso Muerto",
-      description: "Ejercicio compuesto que trabaja toda la cadena posterior",
-    },
-  });
+  // Extract unique categories
+  console.log("📦 Creating exercise categories...");
+  const categories = [
+    ...new Map(
+      exercisesData.map((ex) => [ex.category.id, ex.category])
+    ).values(),
+  ];
+  for (const cat of categories) {
+    const created = await prisma.exerciseCategory.create({
+      data: { name: cat.name },
+    });
+    categoryMap.set(cat.id, created.id);
+  }
 
-  const pressInclinado = await prisma.exercise.create({
-    data: {
-      name: "Press Inclinado con Mancuernas",
-      description: "Variante de press que enfatiza el pectoral superior",
-    },
-  });
+  // Extract unique licenses
+  console.log("📜 Creating exercise licenses...");
+  const licenses = [
+    ...new Map(
+      exercisesData.map((ex) => [ex.license.id, ex.license])
+    ).values(),
+  ];
+  for (const lic of licenses) {
+    const created = await prisma.exerciseLicense.create({
+      data: {
+        fullName: lic.full_name,
+        shortName: lic.short_name,
+        url: lic.url,
+      },
+    });
+    licenseMap.set(lic.id, created.id);
+  }
 
-  const remoBarra = await prisma.exercise.create({
-    data: {
-      name: "Remo con Barra",
-      description: "Ejercicio para espalda media y dorsales",
-    },
+  // Extract unique muscles
+  console.log("💪 Creating muscles...");
+  const musclesSet = new Map();
+  exercisesData.forEach((ex) => {
+    ex.muscles.forEach((m) => musclesSet.set(m.id, m));
+    ex.muscles_secondary.forEach((m) => musclesSet.set(m.id, m));
   });
+  for (const muscle of musclesSet.values()) {
+    const created = await prisma.exerciseMuscle.create({
+      data: {
+        name: muscle.name,
+        nameEn: muscle.name_en,
+        isFront: muscle.is_front,
+        imageUrlMain: muscle.image_url_main,
+        imageUrlSecondary: muscle.image_url_secondary,
+      },
+    });
+    muscleMap.set(muscle.id, created.id);
+  }
 
-  const curlBiceps = await prisma.exercise.create({
-    data: {
-      name: "Curl de Bíceps",
-      description: "Ejercicio de aislamiento para bíceps",
-    },
+  // Extract unique equipment
+  console.log("🏋️ Creating equipment...");
+  const equipmentSet = new Map();
+  exercisesData.forEach((ex) => {
+    ex.equipment.forEach((eq) => equipmentSet.set(eq.id, eq));
   });
+  for (const equip of equipmentSet.values()) {
+    const created = await prisma.exerciseEquipment.create({
+      data: { name: equip.name },
+    });
+    equipmentMap.set(equip.id, created.id);
+  }
 
-  const fondos = await prisma.exercise.create({
-    data: {
-      name: "Fondos en Paralelas",
-      description: "Ejercicio compuesto para pecho y tríceps",
-    },
-  });
+  // Create exercises with all relations
+  console.log("🎯 Creating exercises with relations...");
+  for (const ex of exercisesData) {
+    const exercise = await prisma.exercise.create({
+      data: {
+        uuid: ex.uuid,
+        created: new Date(ex.created),
+        lastUpdate: new Date(ex.last_update),
+        lastUpdateGlobal: new Date(ex.last_update_global),
+        categoryId: categoryMap.get(ex.category.id),
+        licenseId: licenseMap.get(ex.license.id),
+        licenseAuthor: ex.license_author,
+      },
+    });
+    exerciseMap.set(ex.id, exercise.id);
 
-  const sentadillaBulgara = await prisma.exercise.create({
-    data: {
-      name: "Sentadilla Búlgara",
-      description: "Sentadilla unilateral para cuádriceps y glúteos",
-    },
-  });
+    // Create muscle relations (primary)
+    if (ex.muscles && ex.muscles.length > 0) {
+      await prisma.exerciseMuscleRelation.createMany({
+        data: ex.muscles.map((m) => ({
+          exerciseId: exercise.id,
+          muscleId: muscleMap.get(m.id),
+          isPrimary: true,
+        })),
+      });
+    }
 
-  const prensaPiernas = await prisma.exercise.create({
-    data: {
-      name: "Prensa de Piernas",
-      description: "Ejercicio de máquina para tren inferior",
-    },
-  });
+    // Create muscle relations (secondary)
+    if (ex.muscles_secondary && ex.muscles_secondary.length > 0) {
+      await prisma.exerciseMuscleRelation.createMany({
+        data: ex.muscles_secondary.map((m) => ({
+          exerciseId: exercise.id,
+          muscleId: muscleMap.get(m.id),
+          isPrimary: false,
+        })),
+      });
+    }
 
-  const pesoMuertoRumano = await prisma.exercise.create({
-    data: {
-      name: "Peso Muerto Rumano",
-      description: "Variante que enfatiza isquiotibiales y glúteos",
-    },
-  });
+    // Create equipment relations
+    if (ex.equipment && ex.equipment.length > 0) {
+      await prisma.exerciseEquipmentRelation.createMany({
+        data: ex.equipment.map((eq) => ({
+          exerciseId: exercise.id,
+          equipmentId: equipmentMap.get(eq.id),
+        })),
+      });
+    }
 
-  const extensiones = await prisma.exercise.create({
-    data: {
-      name: "Extensiones de Cuádriceps",
-      description: "Ejercicio de aislamiento para cuádriceps",
-    },
-  });
+    // Create images
+    if (ex.images && ex.images.length > 0) {
+      await prisma.exerciseImage.createMany({
+        data: ex.images.map((img) => ({
+          uuid: img.uuid,
+          exerciseId: exercise.id,
+          image: img.image,
+          isMain: img.is_main,
+          style: img.style,
+          licenseId: licenseMap.get(img.license),
+          licenseTitle: img.license_title,
+          licenseObjectUrl: img.license_object_url,
+          licenseAuthor: img.license_author,
+          licenseAuthorUrl: img.license_author_url,
+          licenseDerivativeSourceUrl: img.license_derivative_source_url,
+          authorHistory: JSON.stringify(img.author_history || []),
+        })),
+      });
+    }
 
-  const burpees = await prisma.exercise.create({
-    data: {
-      name: "Burpees",
-      description:
-        "Ejercicio cardiovascular de cuerpo completo de alta intensidad",
-    },
-  });
+    // Create videos
+    if (ex.videos && ex.videos.length > 0) {
+      await prisma.exerciseVideo.createMany({
+        data: ex.videos.map((vid) => ({
+          uuid: vid.uuid,
+          exerciseId: exercise.id,
+          video: vid.video,
+          isMain: vid.is_main,
+          size: vid.size,
+          duration: vid.duration,
+          width: vid.width,
+          height: vid.height,
+          codec: vid.codec,
+          codecLong: vid.codec_long,
+          licenseId: licenseMap.get(vid.license),
+          licenseTitle: vid.license_title,
+          licenseObjectUrl: vid.license_object_url,
+          licenseAuthor: vid.license_author,
+          licenseAuthorUrl: vid.license_author_url,
+          licenseDerivativeSourceUrl: vid.license_derivative_source_url,
+          authorHistory: JSON.stringify(vid.author_history || []),
+        })),
+      });
+    }
 
-  const mountainClimbers = await prisma.exercise.create({
-    data: {
-      name: "Mountain Climbers",
-      description: "Ejercicio de cardio que trabaja core y resistencia",
-    },
-  });
+    // Create translations
+    if (ex.translations && ex.translations.length > 0) {
+      for (const trans of ex.translations) {
+        const translation = await prisma.exerciseTranslation.create({
+          data: {
+            uuid: trans.uuid,
+            exerciseId: exercise.id,
+            name: trans.name,
+            description: trans.description,
+            created: new Date(trans.created),
+            language: trans.language,
+            licenseId: licenseMap.get(trans.license),
+            licenseTitle: trans.license_title,
+            licenseObjectUrl: trans.license_object_url,
+            licenseAuthor: trans.license_author,
+            licenseAuthorUrl: trans.license_author_url,
+            licenseDerivativeSourceUrl: trans.license_derivative_source_url,
+            authorHistory: JSON.stringify(trans.author_history || []),
+          },
+        });
 
-  const jumpingJacks = await prisma.exercise.create({
-    data: {
-      name: "Jumping Jacks",
-      description: "Ejercicio cardiovascular clásico",
-    },
-  });
+        // Create aliases
+        if (trans.aliases && trans.aliases.length > 0) {
+          await prisma.exerciseTranslationAlias.createMany({
+            data: trans.aliases.map((alias) => ({
+              uuid: alias.uuid,
+              translationId: translation.id,
+              alias: alias.alias,
+            })),
+          });
+        }
 
-  const sprints = await prisma.exercise.create({
-    data: {
-      name: "Sprints en Cinta",
-      description: "Intervalos de sprint de alta intensidad",
-    },
-  });
+        // Create notes
+        if (trans.notes && trans.notes.length > 0) {
+          await prisma.exerciseNote.createMany({
+            data: trans.notes.map((note) => ({
+              uuid: note.uuid,
+              translationId: translation.id,
+              comment: note.comment,
+            })),
+          });
+        }
+      }
+    }
+  }
 
-  const kettlebellSwings = await prisma.exercise.create({
-    data: {
-      name: "Kettlebell Swings",
-      description: "Ejercicio balístico para cadena posterior y cardio",
-    },
-  });
+  console.log(
+    `✅ Created ${exercisesData.length} exercises with all relations`
+  );
 
-  const flexiones = await prisma.exercise.create({
-    data: {
-      name: "Flexiones",
-      description: "Ejercicio clásico de peso corporal para pecho y brazos",
-    },
-  });
-
-  const sentadillaSalto = await prisma.exercise.create({
-    data: {
-      name: "Sentadillas con Salto",
-      description: "Ejercicio pliométrico para potencia de piernas",
-    },
-  });
-
-  const plancha = await prisma.exercise.create({
-    data: {
-      name: "Plancha",
-      description: "Ejercicio isométrico para fortalecimiento de core",
-    },
-  });
-
-  const dominadas = await prisma.exercise.create({
-    data: {
-      name: "Dominadas",
-      description: "Ejercicio fundamental de tracción para espalda",
-    },
-  });
-
-  const pressMilitar = await prisma.exercise.create({
-    data: {
-      name: "Press Militar",
-      description: "Ejercicio compuesto para hombros",
-    },
-  });
+  // For routines, use the first exercise with a Spanish translation
+  const firstExerciseWithSpanish = exercisesData.find((ex) =>
+    ex.translations.some((t) => t.language === 4)
+  );
+  const firstExerciseId = exerciseMap.get(firstExerciseWithSpanish.id);
 
   // Create routines with exercises
   console.log("💪 Creating routines with exercises...");
@@ -301,7 +392,7 @@ async function main() {
     data: [
       {
         routineId: routine1.id,
-        exerciseId: sentadillas.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 12,
         weight: 60,
@@ -310,7 +401,7 @@ async function main() {
       },
       {
         routineId: routine1.id,
-        exerciseId: pressBanca.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 10,
         weight: 40,
@@ -319,7 +410,7 @@ async function main() {
       },
       {
         routineId: routine1.id,
-        exerciseId: pesoMuerto.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 8,
         weight: 80,
@@ -343,7 +434,7 @@ async function main() {
     data: [
       {
         routineId: routine2.id,
-        exerciseId: pressInclinado.id,
+        exerciseId: firstExerciseId,
         sets: 4,
         reps: 10,
         rest: 90,
@@ -351,7 +442,7 @@ async function main() {
       },
       {
         routineId: routine2.id,
-        exerciseId: remoBarra.id,
+        exerciseId: firstExerciseId,
         sets: 4,
         reps: 10,
         rest: 90,
@@ -359,7 +450,7 @@ async function main() {
       },
       {
         routineId: routine2.id,
-        exerciseId: curlBiceps.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 12,
         rest: 60,
@@ -367,7 +458,7 @@ async function main() {
       },
       {
         routineId: routine2.id,
-        exerciseId: fondos.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 12,
         rest: 60,
@@ -390,7 +481,7 @@ async function main() {
     data: [
       {
         routineId: routine3.id,
-        exerciseId: sentadillaBulgara.id,
+        exerciseId: firstExerciseId,
         sets: 4,
         reps: 10,
         rest: 90,
@@ -398,7 +489,7 @@ async function main() {
       },
       {
         routineId: routine3.id,
-        exerciseId: prensaPiernas.id,
+        exerciseId: firstExerciseId,
         sets: 4,
         reps: 12,
         rest: 90,
@@ -406,7 +497,7 @@ async function main() {
       },
       {
         routineId: routine3.id,
-        exerciseId: pesoMuertoRumano.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 10,
         rest: 90,
@@ -414,7 +505,7 @@ async function main() {
       },
       {
         routineId: routine3.id,
-        exerciseId: extensiones.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 15,
         rest: 60,
@@ -437,7 +528,7 @@ async function main() {
     data: [
       {
         routineId: routine4.id,
-        exerciseId: burpees.id,
+        exerciseId: firstExerciseId,
         sets: 4,
         reps: 15,
         rest: 30,
@@ -445,7 +536,7 @@ async function main() {
       },
       {
         routineId: routine4.id,
-        exerciseId: mountainClimbers.id,
+        exerciseId: firstExerciseId,
         sets: 4,
         reps: 20,
         rest: 30,
@@ -453,7 +544,7 @@ async function main() {
       },
       {
         routineId: routine4.id,
-        exerciseId: jumpingJacks.id,
+        exerciseId: firstExerciseId,
         sets: 4,
         reps: 30,
         rest: 30,
@@ -461,7 +552,7 @@ async function main() {
       },
       {
         routineId: routine4.id,
-        exerciseId: sprints.id,
+        exerciseId: firstExerciseId,
         sets: 5,
         reps: 1,
         rest: 60,
@@ -484,7 +575,7 @@ async function main() {
     data: [
       {
         routineId: routine5.id,
-        exerciseId: kettlebellSwings.id,
+        exerciseId: firstExerciseId,
         sets: 4,
         reps: 15,
         rest: 60,
@@ -492,7 +583,7 @@ async function main() {
       },
       {
         routineId: routine5.id,
-        exerciseId: flexiones.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 15,
         rest: 60,
@@ -500,7 +591,7 @@ async function main() {
       },
       {
         routineId: routine5.id,
-        exerciseId: sentadillaSalto.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 12,
         rest: 60,
@@ -508,7 +599,7 @@ async function main() {
       },
       {
         routineId: routine5.id,
-        exerciseId: plancha.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 1,
         rest: 45,
@@ -531,7 +622,7 @@ async function main() {
     data: [
       {
         routineId: routine6.id,
-        exerciseId: dominadas.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 8,
         rest: 120,
@@ -539,7 +630,7 @@ async function main() {
       },
       {
         routineId: routine6.id,
-        exerciseId: pressMilitar.id,
+        exerciseId: firstExerciseId,
         sets: 3,
         reps: 10,
         rest: 90,
@@ -548,18 +639,22 @@ async function main() {
     ],
   });
 
-  console.log("✅ Seed completed successfully!");
+  console.log("\n✅ Seed completed successfully!");
   console.log("\n📊 Created:");
   console.log(`  - 1 Admin`);
   console.log(`  - 2 Trainers`);
   console.log(`  - 4 Athletes`);
   console.log(`  - 5 Trainer-Athlete relationships`);
   console.log(`  - 3 User metrics profiles`);
-  console.log(`  - 21 Exercises in catalog`);
+  console.log(`  - ${categories.length} Exercise categories`);
+  console.log(`  - ${licenses.length} Exercise licenses`);
+  console.log(`  - ${musclesSet.size} Muscles`);
+  console.log(`  - ${equipmentSet.size} Equipment types`);
+  console.log(`  - ${exercisesData.length} Exercises with full details`);
   console.log(`  - 6 Routines with assigned exercises`);
   console.log("\n🔐 Login credentials:");
   console.log("\n👑 Admin:");
-  console.log(`  - admin@admin.com / admin`);
+  console.log(`  - admin@admin.com / admin1`);
   console.log("\n👨‍🏫 Trainers (Password: Password123):");
   console.log(`  - trainer1@gym.com (Carlos Martínez)`);
   console.log(`  - trainer2@gym.com (Ana García)`);
