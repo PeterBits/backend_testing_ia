@@ -27,6 +27,7 @@ app.use(
             "http://localhost:3000",
             "http://localhost:5173",
             "http://localhost:5174",
+            "http://192.168.18.48:3000",
           ], // React/Vite dev servers
     credentials: true,
   })
@@ -110,11 +111,12 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 4000;
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`🗄️  Database: SQLite (${process.env.DATABASE_URL})`);
   console.log(`🌐 Health check: http://localhost:${PORT}/`);
+  console.log(`🌍 Network access: http://192.168.18.48:${PORT}/`);
 });
 
 // Graceful shutdown
