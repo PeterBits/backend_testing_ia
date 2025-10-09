@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Commit Guidelines
+
+**IMPORTANT**: When creating git commits, NEVER include attribution lines such as:
+- "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+- "Co-Authored-By: Claude <noreply@anthropic.com>"
+
+Commits should appear as if they were made directly by the user without any AI assistance attribution.
+
 ## Project Overview
 
 REST API backend for GAINZ fitness tracking application built with Node.js, Express, Prisma ORM, and SQLite (development) / PostgreSQL (production). Supports JWT authentication, role-based access control (ATHLETE/TRAINER), and full CRUD operations for workout routines and exercises. Trainers can manage multiple athletes and assign routines to them.
@@ -206,11 +214,32 @@ Uses `express-validator` with custom validators:
 
 ### Security Features
 
-- **Rate limiting**: 100 requests/15min (general), 5 requests/15min (auth endpoints)
-- **CORS**: Configured for localhost:3000 and localhost:5173 in dev
+- **Rate limiting**: 100 requests/15min (general), 15 requests/15min (auth endpoints)
+- **CORS**: Configured for multiple origins in development:
+  - localhost:3000, localhost:5173, localhost:5174 (local dev servers)
+  - 192.168.18.48:3000 (network access from other devices)
 - **Helmet**: Security headers enabled
 - **Body size limit**: 10mb JSON payloads
 - **No password leakage**: User queries explicitly exclude password field
+
+### Network Access Configuration
+
+The server is configured to accept connections from other devices on the local network:
+
+- **Server binding**: Listens on `0.0.0.0` (all network interfaces) instead of just `localhost`
+- **Local access**: `http://localhost:4000/`
+- **Network access**: `http://192.168.18.48:4000/` (or your local IP address)
+- **Firewall**: May need to allow incoming connections on port 4000 in Windows Firewall
+
+**To connect from another device:**
+1. Ensure both devices are on the same network (same Wi-Fi/LAN)
+2. Use the server's local IP address in API requests (e.g., `http://192.168.18.48:4000/api`)
+3. Add the client's origin to the CORS configuration in `src/server.js` if needed (e.g., `http://192.168.18.48:3000`)
+4. Configure firewall rules to allow TCP traffic on port 4000:
+   ```powershell
+   # Windows PowerShell (as Administrator)
+   netsh advfirewall firewall add rule name="Node.js GAINZ API" dir=in action=allow protocol=TCP localport=4000
+   ```
 
 ## Configuration
 
